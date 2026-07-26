@@ -40,7 +40,7 @@ jobs:
           # Build Proton-GE
           git clone https://github.com/GloriousEggroll/proton-ge-custom.git proton-ge-custom
           cd proton-ge-custom
-          git submodule update --init --recursive
+          for i in {1..3}; do git submodule update --init --recursive && break || sleep $((i * 30)); done
           ./patches/protonprep-valve-staging.sh &> patchlog.txt
           patch -p1 < ../patch-repo/LinUwUx.patch
           export CCACHE_DISABLE=1
@@ -55,7 +55,7 @@ jobs:
           # Build Proton-CachyOS
           git clone https://github.com/CachyOS/proton-cachyos.git proton-cachyos
           cd proton-cachyos
-          git submodule update --init --recursive
+          for i in {1..3}; do git submodule update --init --recursive && break || sleep $((i * 30)); done
           find . -name "*.rej" -delete
           patch -p1 < ../patch-repo/LinUwUx.patch
           export CCACHE_DISABLE=1
