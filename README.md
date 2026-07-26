@@ -4,8 +4,8 @@ Custom Proton builds patched with "LinUwUx.patch" from cs.rin.ru.
 
 ## Features
 
-- **Proton-CachyOS** builds patched in order to make HV bypass working on Linux.
-- **Proton-GE** builds patched in order to make HV bypass working on Linux.
+- **Proton-CachyOS** latest x86_64 builds patched in order to make HV bypass working on Linux.
+- **Proton-GE** latest x86_64 builds patched in order to make HV bypass working on Linux.
 
 ## Downloads
 
