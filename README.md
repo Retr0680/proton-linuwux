@@ -1,6 +1,6 @@
 # Proton-LinUwUx
 
-Custom Proton builds patched with "LinUwUx.patch" from cs.rin.ru.
+Custom Proton builds patched with "LinUwUx.patch" from **cs.rin.ru**[A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989).
 
 ## Features
 
