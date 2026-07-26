@@ -1,0 +1,95 @@
+name: Build All Proton LinUwUx
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+      options: --privileged
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Copy Patch into container
+      uses: actions/checkout@v4
+      with:
+        path: patch-repo
+
+    - name: Install dependencies
+      run: |
+        apt-get update && apt-get install -y \
+        build-essential git curl wget python3 python3-pip \
+        flex bison libssl-dev libelf-dev zlib1g-dev libglib2.0-dev \
+        libpulse-dev libasound2-dev libfreetype6-dev libfontconfig1-dev \
+        cmake ninja-build gettext autoconf automake libtool 
+
+    # Compilazione Proton-GE
+    - name: Build Proton-GE
+      run: |
+        git clone https://github.com/GloriousEggroll/proton-ge-custom.git proton-ge-custom
+        cd proton-ge-custom
+        git submodule update --init --recursive
+        ./patches/protonprep-valve-staging.sh &> patchlog.txt
+        patch -p1 < ../patch-repo/LinUwUx.patch
+        
+        export CCACHE_DISABLE=1
+        mkdir build && cd build
+        ../configure.sh
+        make redist
+        
+        for f in *.tar.xz; do
+          mv "$f" "../${f%.tar.xz}-LinUwUx.tar.xz"
+        done
+      working-directory: .
+
+    # Compilazione Proton-CachyOS
+    - name: Build Proton-CachyOS
+      run: |
+        git clone https://github.com/CachyOS/proton-cachyos.git proton-cachyos
+        cd proton-cachyos
+        git submodule update --init --recursive
+        find . -name "*.rej" -delete
+        patch -p1 < ../patch-repo/LinUwUx.patch
+        
+        export CCACHE_DISABLE=1
+        mkdir -p build/release
+        cd build/release
+        ../../configure.sh
+        make redist
+        
+        for f in *.tar.xz; do
+          mv "$f" "../../../${f%.tar.xz}-LinUwUx.tar.xz"
+        done
+      working-directory: .
+
+    - name: Get Current Date
+      id: date
+      run: echo "date=$(date +'%d/%m/%Y')" >> $GITHUB_OUTPUT
+
+    - name: Get Tag Version
+      id: tag
+      run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: LinUwUx Proton Builds ${{ steps.tag.outputs.tag }} (${{ steps.date.outputs.date }})
+        files: |
+          *-LinUwUx.tar.xz
+        body: |
+          Automated builds compiled via GitHub Actions.
+          - Proton-GE LinUwUx
+          - Proton-CachyOS LinUwUx
