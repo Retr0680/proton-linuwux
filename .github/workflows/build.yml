@@ -87,9 +87,10 @@ jobs:
       with:
         tag_name: ${{ github.ref_name }}
         name: LinUwUx Proton Builds ${{ steps.tag.outputs.tag }} (${{ steps.date.outputs.date }})
+        prerelease: true
         files: |
           *-LinUwUx.tar.xz
         body: |
-          Automated builds compiled via GitHub Actions.
+          Test build.
           - Proton-GE LinUwUx
           - Proton-CachyOS LinUwUx
