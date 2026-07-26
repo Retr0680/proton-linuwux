@@ -35,7 +35,7 @@ jobs:
             flex bison libssl-dev libelf-dev zlib1g-dev libglib2.0-dev \
             libpulse-dev libasound2-dev libfreetype6-dev libfontconfig1-dev \
             cmake ninja-build gettext autoconf automake libtool \
-            docker.io
+            docker.io sed
           cd /workspace
 
           # Configure git to use mirrors for rate-limited servers
@@ -52,6 +52,8 @@ jobs:
           # Build Proton-GE
           git clone https://github.com/GloriousEggroll/proton-ge-custom.git proton-ge-custom
           cd proton-ge-custom
+          # Rewrite .gitmodules to use GitHub mirror for bzip2
+          sed -i 's|https://sourceware.org/git/bzip2.git|https://github.com/libarchive/bzip2.git|g' .gitmodules
           for i in {1..5}; do git submodule update --init --recursive && break || sleep $((i * 60)); done
           ./patches/protonprep-valve-staging.sh &> patchlog.txt
           patch -p1 < ../patch-repo/LinUwUx.patch
@@ -67,6 +69,8 @@ jobs:
           # Build Proton-CachyOS
           git clone https://github.com/CachyOS/proton-cachyos.git proton-cachyos
           cd proton-cachyos
+          # Rewrite .gitmodules to use GitHub mirror for bzip2
+          sed -i 's|https://sourceware.org/git/bzip2.git|https://github.com/libarchive/bzip2.git|g' .gitmodules
           for i in {1..5}; do git submodule update --init --recursive && break || sleep $((i * 60)); done
           find . -name "*.rej" -delete
           patch -p1 < ../patch-repo/LinUwUx.patch
