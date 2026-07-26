@@ -74,5 +74,29 @@ jobs:
 
     - name: Upload build artifacts (fallback)
       if: failure() || always()
-      uses: actions/uploa*
-
+      uses: actions/upload-artifact@v4
+      with:
+        name: proton-linuwux-builds
+        path: |
+          *-LinUwUx.tar.xz
+
+    - name: Get Current Date
+      id: date
+      run: echo "date=$(date +'%d/%m/%Y')" >> $GITHUB_OUTPUT
+
+    - name: Get Tag Version
+      id: tag
+      run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: LinUwUx Proton Builds ${{ steps.tag.outputs.tag }} (${{ steps.date.outputs.date }})
+        prerelease: true
+        files: |
+          *-LinUwUx.tar.xz
+        body: |
+          Test build.
+          - Proton-GE LinUwUx
+          - Proton-CachyOS LinUwUx
