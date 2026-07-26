@@ -27,6 +27,7 @@ jobs:
       with:
         image: ubuntu:22.04
         options: -v ${{ github.workspace }}:/workspace
+        shell: bash
         run: |
           set -euo pipefail
           apt-get update && apt-get install -y --no-install-recommends \
@@ -95,8 +96,5 @@ jobs:
         name: LinUwUx Proton Builds ${{ steps.tag.outputs.tag }} (${{ steps.date.outputs.date }})
         prerelease: true
         files: |
-          *-LinUwUx.tar.xz
-        body: |
-          Test build.
-          - Proton-GE LinUwUx
-          - Proton-CachyOS LinUwUx
+          *-LinUwUx.tar*
+
