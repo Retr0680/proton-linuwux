@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install Git first (required for submodules)
+      run: apt-get update && apt-get install -y git
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
@@ -27,7 +30,6 @@ jobs:
       uses: addnab/docker-run-action@v3
       with:
         image: ubuntu:22.04
-        # avoid --privileged unless necessary; mount workspace
         options: -v ${{ github.workspace }}:/workspace
         run: |
           set -euo pipefail
