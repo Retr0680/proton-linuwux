@@ -93,8 +93,5 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.ref_name }}
-        name: LinUwUx Proton Builds ${{ steps.tag.outputs.tag }} (${{ steps.date.outputs.date }})
-        prerelease: true
-        files: |
-          *-LinUwUx.tar*
+        name: LinUwUx Proton*
 
