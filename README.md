@@ -14,7 +14,7 @@ Grab the latest patched builds from the [Releases](../../releases) section.
 ## Credits
 
 - **LinUwUx Team**
-- **DenuvOwO**
+- **DenuvOwO Team**
 - **GloriousEggroll**
 - **CachyOS Team**
 - **Valve** (Proton)
