@@ -19,7 +19,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Copy Patch into container / workspace
+    - name: Copy Patch to workspace
       run: mkdir -p patch-repo && cp LinUwUx.patch patch-repo/ || true
 
     - name: Build Proton inside Docker
@@ -36,7 +36,7 @@ jobs:
 
           cd /workspace
 
-          # Compilazione Proton-GE
+          # Building Proton-GE
           git clone https://github.com/GloriousEggroll/proton-ge-custom.git proton-ge-custom
           cd proton-ge-custom
           git submodule update --init --recursive
@@ -53,7 +53,7 @@ jobs:
           done
           cd ..
 
-          # Compilazione Proton-CachyOS
+          # Building Proton-CachyOS
           git clone https://github.com/CachyOS/proton-cachyos.git proton-cachyos
           cd proton-cachyos
           git submodule update --init --recursive
