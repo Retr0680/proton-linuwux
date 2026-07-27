@@ -18,14 +18,14 @@ Grab the latest patched builds from the [Releases](../../releases) section.
 ### How do I install and use these Proton builds?
 
 - **On Steam:**
-  1. Extract the builds to your Steam compatibility folder (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`).
-  2. Restart Steam.
-  3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your build.
+    1. Extract the builds to your Steam compatibility folder (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`).
+    2. Restart Steam.
+    3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your build.
 
 - **On Faugus Launcher:**
-  1. Extract the builds to the same Steam compatibility folder as above.
-  2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
-  3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, locate `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (**Remember to repeat this step each time you add a new game or modify launch options both for new and already existing games**).
+    1. Extract the builds to the same Steam compatibility folder as above.
+    2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
+    3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, locate `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (**Remember to repeat this step each time you add a new game or modify launch options both for new and already existing games**).
 
 ### What is the difference between Proton-CachyOS and Proton-GE?
 Both are patched for the HV bypass, but they are based on different underlying upstream projects (CachyOS builds or Proton-GE). 
