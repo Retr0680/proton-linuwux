@@ -30,15 +30,13 @@ echo "== Aggiornamento submodule =="
 git submodule update --init --recursive
 
 
-echo "== Applicazione LinUwUx.patch =="
-
-patch -p1 < "$ROOT_DIR/LinUwUx.patch"
-
-
 echo "== Preparazione Proton =="
 
 ./patches/protonprep-valve-staging.sh
 
+echo "== Applicazione LinUwUx.patch =="
+
+patch -p1 < "$ROOT_DIR/LinUwUx.patch"
 
 echo "== Disabilito ccache =="
 
