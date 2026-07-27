@@ -17,21 +17,21 @@ Grab the latest patched builds from the [Releases](../../releases) section.
 
 **How do I install these Proton builds?**
 
-Download the archive from the Releases section and extract it to your Steam compatibility folder (usually ~/.steam/root/compatibilitytools.d/). Restart Steam.
+Download the archive from the Releases section and extract it to your Steam compatibility folder (usually `~/.steam/root/compatibilitytools.d/`). Restart Steam.
 
 **How do I launch games using these Proton builds?**
 
 - **Steam:**
-  1. Extract the builds to your Steam compatibility folder:
+  I. Extract the builds to your Steam compatibility folder:
      - **Steam Native:** `~/.local/share/Steam/compatibilitytools.d/`
      - **Steam Flatpak:** `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`
-  2. Restart Steam.
-  3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your custom build.
+  II. Restart Steam.
+  III. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your custom build.
 
 - **Faugus Launcher:**
-  1. Extract the builds to the correct compatibility folder (same paths as above).
-  2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
-  3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
+  I. Extract the builds to the correct compatibility folder (same paths as above).
+  II. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
+  III. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
 
 
 3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. Note that you need to redo this step if you modify or add new games.
@@ -42,7 +42,7 @@ Both are patched for the HV bypass, but they are based on different underlying u
 
 **Do these work on immutable distros (like Steam Deck, Fedora Silverblue, Bazzite)?**
 
-Yes, but since the root file system is read-only, you must place the compatibility tool inside your home directory (~/.steam/root/compatibilitytools.d/ or ~/.local/share/Steam/compatibilitytools.d/). Do not try to write to /usr/share/steam.
+Yes, but since the root file system is read-only, you must place the compatibility tool inside your home directory (`~/.steam/root/compatibilitytools.d/` or `~/.local/share/Steam/compatibilitytools.d/`). Do not try to write to /usr/share/steam.
 
 **Does the hypervisor bypass work on ARM devices?**
 
