@@ -22,16 +22,16 @@ Download the archive from the Releases section and extract it to your Steam comp
 **How do I launch games using these Proton builds?**
 
 - **Steam:**
-  I. Extract the builds to your Steam compatibility folder:
+  1. Extract the builds to your Steam compatibility folder:
      - **Steam Native:** `~/.local/share/Steam/compatibilitytools.d/`
      - **Steam Flatpak:** `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`
-  II. Restart Steam.
-  III. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your custom build.
+  2. Restart Steam.
+  3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your custom build.
 
 - **Faugus Launcher:**
-  I. Extract the builds to the correct compatibility folder (same paths as above).
-  II. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
-  III. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
+  1. Extract the builds to the correct compatibility folder (same paths as above).
+  2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
+  3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
 
 
 3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. Note that you need to redo this step if you modify or add new games.
