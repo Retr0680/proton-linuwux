@@ -13,19 +13,28 @@ Custom Proton builds patched with "LinUwUx.patch" from **cs.rin.ru**: [A Hypervi
 
 Grab the latest patched builds from the [Releases](../../releases) section.
 
-## Credits
-
-- **LinUwUx Team**
-- **DenuvOwO Team**
-- **GloriousEggroll**
-- **CachyOS Team**
-- **Valve** (Proton)
-
 ## FAQ
 
 **How do I install these Proton builds?**
 
 Download the archive from the Releases section and extract it to your Steam compatibility folder (usually ~/.steam/root/compatibilitytools.d/). Restart Steam.
+
+**How do I launch games using these Proton builds?**
+
+- **Steam:**
+  1. Extract the builds to your Steam compatibility folder:
+     - **Steam Native:** `~/.local/share/Steam/compatibilitytools.d/`
+     - **Steam Flatpak:** `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`
+  2. Restart Steam.
+  3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your custom build.
+
+- **Faugus Launcher:**
+  1. Extract the builds to the correct compatibility folder (same paths as above).
+  2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
+  3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
+
+
+3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. Note that you need to redo this step if you modify or add new games.
 
 **What is the difference between Proton-CachyOS and Proton-GE?**
 
@@ -41,8 +50,16 @@ No. Translators like FEX-Emu lack cpuid_fault support and only handle user-mode 
 
 **Does it work with all Denuvo games?**
 
-The goal is to bypass Hypervisor checks, but compatibility depends on the specific game and Denuvo updates. Check the original thread on cs.rin.ru and the specific game threads to see if an hypervisor crack is available for them.
+The goal is to bypass Hypervisor checks, but compatibility depends on the specific game and Denuvo updates. Check the original thread on [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989) and the specific game threads to see if an hypervisor crack is available for them.
 
 **Is there a risk of getting banned?**
 
 Use these patches at your own risk. Modifying Proton files or bypassing anti-tamper systems can violate Steam's Terms of Service.
+
+## Credits
+
+- **LinUwUx Team**
+- **DenuvOwO Team**
+- **GloriousEggroll**
+- **CachyOS Team**
+- **Valve** (Proton)
