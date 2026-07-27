@@ -26,11 +26,11 @@ jobs:
           docker system prune -af || true
           df -h
 
-      - name: Install Docker
+      - name: Check Docker
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          docker --version
+         which docker || true
+         docker --version || true
+         docker info || true
 
       - name: Install dependencies
         run: |
