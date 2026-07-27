@@ -26,6 +26,12 @@ jobs:
           docker system prune -af || true
           df -h
 
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          docker --version
+
       - name: Install dependencies
         run: |
           ./scripts/install-deps.sh
