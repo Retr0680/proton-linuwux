@@ -33,9 +33,6 @@ Download the archive from the Releases section and extract it to your Steam comp
   2. If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
   3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (Note: you must repeat this step when adding or modifying games).
 
-
-3. Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, look for `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. Note that you need to redo this step if you modify or add new games.
-
 **What is the difference between Proton-CachyOS and Proton-GE?**
 
 Both are patched for the HV bypass, but they are based on different underlying upstream projects (CachyOS builds or Proton-GE).
