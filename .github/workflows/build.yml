@@ -45,10 +45,9 @@ jobs:
         git clone https://github.com/GloriousEggroll/proton-ge-custom.git proton-ge-custom
         cd proton-ge-custom
         
-        # Rewrite .gitmodules recursively for ALL nested submodules
         find . -name ".gitmodules" -type f -exec sed -i 's|https://sourceware.org/git/bzip2.git|https://github.com/libarchive/bzip2.git|g' {} \;
+        git submodule sync --recursive
         
-        # Clone submodules with retry logic
         for i in {1..5}; do git submodule update --init --recursive && break || sleep $((i * 60)); done
         
         ./patches/protonprep-valve-staging.sh &> patchlog.txt
@@ -67,10 +66,9 @@ jobs:
         git clone https://github.com/CachyOS/proton-cachyos.git proton-cachyos
         cd proton-cachyos
         
-        # Rewrite .gitmodules recursively for ALL nested submodules
         find . -name ".gitmodules" -type f -exec sed -i 's|https://sourceware.org/git/bzip2.git|https://github.com/libarchive/bzip2.git|g' {} \;
+        git submodule sync --recursive
         
-        # Clone submodules with retry logic
         for i in {1..5}; do git submodule update --init --recursive && break || sleep $((i * 60)); done
         
         find . -name "*.rej" -delete
