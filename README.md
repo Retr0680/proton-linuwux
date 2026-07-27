@@ -18,7 +18,7 @@ Grab the latest patched builds from the [Releases](../../releases) section.
 ### How do I install and use these Proton builds?
 
 - **On Steam:**
-  1. Extract the builds to your Steam compatibility folder (`~/.steam/root/compatibilitytools.d/` or `~/.local/share/Steam/compatibilitytools.d/`).
+  1. Extract the builds to your Steam compatibility folder (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`).
   2. Restart Steam.
   3. Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your build.
 
@@ -31,7 +31,7 @@ Grab the latest patched builds from the [Releases](../../releases) section.
 Both are patched for the HV bypass, but they are based on different underlying upstream projects (CachyOS builds or Proton-GE). 
 
 ### Do these work on immutable distros (like Steam Deck, Fedora Silverblue, Bazzite)?
-Yes, but since the root file system is read-only, you must place the compatibility tool inside your home directory (`~/.steam/root/compatibilitytools.d/` or `~/.local/share/Steam/compatibilitytools.d/`). Do not try to write to `/usr/share/steam`.
+Yes, but since the root file system is read-only, you must place the compatibility tool inside your home directory (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`). Do not try to write to `/usr/share/steam`.
 
 ### Does the hypervisor bypass work on ARM devices?
 No. Translators like FEX-Emu lack `cpuid_fault` support and only handle user-mode instructions. Denuvo also checks things that emulators cannot spoof, like floating point division accuracy. ARM users should look into traditional cracks or offline activations instead.
