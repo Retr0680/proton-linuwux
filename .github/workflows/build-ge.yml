@@ -28,9 +28,9 @@ jobs:
 
       - name: Check Docker
         run: |
-         which docker || true
-         docker --version || true
-         docker info || true
+          which docker || true
+          docker --version || true
+          docker info || true
 
       - name: Install dependencies
         run: |
@@ -73,9 +73,35 @@ jobs:
           echo "Archivio: $archive"
           echo "Tag Release: $release_tag"
 
+          notes="$(
+              printf '%s\n' \
+                  '# Proton LinUwUx' \
+                  '' \
+                  'Automatically built from the latest Proton-GE release.' \
+                  '' \
+                  '## Base' \
+                  "- $release_tag" \
+                  '' \
+                  '## Patch' \
+                  '- LinUwUx.patch' \
+                  '' \
+                  '## Credits' \
+                  '' \
+                  '- Proton-GE: [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom)' \
+                  '- LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
+                  '' \
+                  'Built automatically with GitHub Actions.'
+          )"
+
           if gh release view "$release_tag" >/dev/null 2>&1
           then
-              echo "La Release esiste già: aggiorno il file allegato."
+              echo "La Release esiste già: aggiorno descrizione e file allegato."
+
+              gh release edit \
+                  "$release_tag" \
+                  --title "$release_tag" \
+                  --notes "$notes" \
+                  --latest
 
               gh release upload \
                   "$release_tag" \
@@ -88,7 +114,7 @@ jobs:
                   "$release_tag" \
                   "$archive" \
                   --title "$release_tag" \
-                  --notes "Build automatica di Proton-GE con LinUwUx.patch." \
+                  --notes "$notes" \
                   --latest
           fi
 
