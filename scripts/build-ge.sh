@@ -10,17 +10,33 @@ OUTPUT="$ROOT_DIR/output"
 mkdir -p "$WORKDIR"
 mkdir -p "$OUTPUT"
 
-echo "== Clonazione Proton-GE =="
+echo "== Rilevamento ultima release Proton-GE =="
+
+GE_TAG="$(
+    curl -fsSL \
+        https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest |
+    python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
+)"
+
+if [[ -z "$GE_TAG" ]]
+then
+    echo "Errore: impossibile rilevare l'ultima release Proton-GE."
+    exit 1
+fi
+
+echo "Ultima release rilevata: $GE_TAG"
+
+echo "== Clonazione Proton-GE $GE_TAG =="
 
 cd "$WORKDIR"
 
 rm -rf proton-ge-custom
 
-
 git clone \
+    --branch "$GE_TAG" \
+    --single-branch \
     https://github.com/GloriousEggroll/proton-ge-custom.git \
     proton-ge-custom
-
 
 cd proton-ge-custom
 
@@ -72,7 +88,7 @@ cd build
 
 
 ../configure.sh \
-    --build-name="GE-LinUwUx"
+    --build-name="${GE_TAG}-LinUwUx"
 
 
 echo "== Download preventivo xrandr =="
