@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -49,6 +49,48 @@ jobs:
           name: GE-Proton-LinUwUx
           path: output/
           if-no-files-found: error
+
+      - name: Publish Proton-GE release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+
+          archives=(output/GE-Proton*-LinUwUx.tar.gz)
+
+          if [ "${#archives[@]}" -ne 1 ]
+          then
+              echo "Errore: atteso esattamente un archivio .tar.gz in output/."
+              ls -lah output/
+              exit 1
+          fi
+
+          archive="${archives[0]}"
+          filename="$(basename "$archive")"
+          release_tag="${filename%.tar.gz}"
+
+          echo "Archivio: $archive"
+          echo "Tag Release: $release_tag"
+
+          if gh release view "$release_tag" >/dev/null 2>&1
+          then
+              echo "La Release esiste già: aggiorno il file allegato."
+
+              gh release upload \
+                  "$release_tag" \
+                  "$archive" \
+                  --clobber
+          else
+              echo "Creazione nuova Release."
+
+              gh release create \
+                  "$release_tag" \
+                  "$archive" \
+                  --title "$release_tag" \
+                  --notes "Build automatica di Proton-GE con LinUwUx.patch." \
+                  --latest
+          fi
 
       - name: Upload diagnostic logs
         if: always()
