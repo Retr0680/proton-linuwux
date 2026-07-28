@@ -75,9 +75,23 @@ cd build
     --build-name="GE-LinUwUx"
 
 
-echo "== Compilazione =="
+echo "== Download preventivo xrandr =="
 
-export WGETRC="$ROOT_DIR/wgetrc"
+XRANDR_TARBALL="$WORKDIR/proton-ge-custom/contrib/xrandr-1.5.4.tar.xz"
+
+rm -f "$XRANDR_TARBALL"
+
+wget \
+    --https-only \
+    --no-check-certificate \
+    --tries=5 \
+    --timeout=30 \
+    -O "$XRANDR_TARBALL" \
+    "https://xorg.freedesktop.org/archive/individual/app/xrandr-1.5.4.tar.xz"
+
+test -s "$XRANDR_TARBALL"
+
+echo "== Compilazione =="
 
 make redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
