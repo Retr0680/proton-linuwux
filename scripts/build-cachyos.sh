@@ -98,3 +98,77 @@ do
     echo "Download fallito. Attendo $wait_seconds secondi prima di riprovare..."
     sleep "$wait_seconds"
 done
+
+echo "== Applicazione LinUwUx.patch =="
+
+PATCH_FILE="$ROOT_DIR/LinUwUx.patch"
+
+if [[ ! -f "$PATCH_FILE" ]]
+then
+    echo "Errore: LinUwUx.patch non trovato:"
+    echo "$PATCH_FILE"
+    exit 1
+fi
+
+cd "$WORKDIR/proton-cachyos"
+
+echo "Verifica preliminare della patch..."
+
+if ! patch --dry-run -p1 < "$PATCH_FILE"
+then
+    echo "Errore: LinUwUx.patch non è compatibile con questa versione di Proton-CachyOS."
+    exit 1
+fi
+
+patch -p1 < "$PATCH_FILE"
+
+echo "LinUwUx.patch applicata correttamente."
+
+echo "== Preparazione directory di build =="
+
+BUILD_DIR="$WORKDIR/proton-cachyos-build"
+
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+
+cd "$BUILD_DIR"
+
+echo "Directory sorgente: $WORKDIR/proton-cachyos"
+echo "Directory build: $BUILD_DIR"
+
+echo "== Configurazione Proton-CachyOS =="
+
+"$WORKDIR/proton-cachyos/configure.sh" \
+    --build-name="$BUILD_NAME" \
+    --enable-cache
+
+echo "== Compilazione Proton-CachyOS =="
+
+make redist
+
+echo "== Creazione archivio finale =="
+
+REDIST_DIR="$BUILD_DIR/redist"
+PACKAGE_DIR="$WORKDIR/$BUILD_NAME"
+ARCHIVE="$OUTPUT/$BUILD_NAME.tar.gz"
+
+if [[ ! -d "$REDIST_DIR" ]]
+then
+    echo "Errore: directory redist non trovata:"
+    echo "$REDIST_DIR"
+    exit 1
+fi
+
+rm -rf "$PACKAGE_DIR"
+mkdir -p "$PACKAGE_DIR"
+
+cp -a "$REDIST_DIR"/. "$PACKAGE_DIR"/
+
+rm -f "$ARCHIVE"
+
+tar -C "$WORKDIR" \
+    -czf "$ARCHIVE" \
+    "$BUILD_NAME"
+
+echo "Build completata correttamente:"
+echo "$ARCHIVE"
