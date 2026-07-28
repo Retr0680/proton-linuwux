@@ -61,7 +61,7 @@ make redist
 
 echo "== Copia risultato =="
 
-cp *.tar.xz "$OUTPUT/"
+find . -maxdepth 1 -name "*.tar.*" -exec cp {} "$OUTPUT/" \;
 
 
 echo "== Proton-GE completato =="
