@@ -56,6 +56,8 @@ cd build
 
 echo "== Compilazione =="
 
+export WGETRC="$ROOT_DIR/wgetrc"
+
 make redist
 
 
