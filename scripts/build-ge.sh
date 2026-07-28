@@ -93,11 +93,13 @@ wget \
 
 test -s "$XRANDR_TARBALL"
 
+echo "== Compilazione =="
+
+make redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 echo "== Copia risultato =="
 
 find . -maxdepth 1 -name "*.tar.*" -exec cp {} "$OUTPUT/" \;
-
 
 echo "== Proton-GE completato =="
 
