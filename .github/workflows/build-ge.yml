@@ -1,4 +1,4 @@
-name: Build Proton LinUwUx
+name: Build Proton-GE LinUwUx
 
 on:
   workflow_dispatch:
