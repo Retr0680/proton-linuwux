@@ -27,7 +27,28 @@ cd proton-ge-custom
 
 echo "== Aggiornamento submodule =="
 
-git submodule update --init --recursive
+git submodule sync --recursive
+
+for attempt in 1 2 3 4 5
+do
+    echo "Tentativo submodule $attempt di 5"
+
+    if git submodule update --init --recursive --jobs 1
+    then
+        break
+    fi
+
+    if [ "$attempt" -eq 5 ]
+    then
+        echo "Errore: impossibile scaricare tutti i submodule dopo 5 tentativi."
+        exit 1
+    fi
+
+    wait_seconds=$((attempt * 60))
+
+    echo "Download fallito. Attendo $wait_seconds secondi prima di riprovare..."
+    sleep "$wait_seconds"
+done
 
 
 echo "== Preparazione Proton =="
