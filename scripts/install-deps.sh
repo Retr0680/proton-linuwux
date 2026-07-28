@@ -4,12 +4,20 @@ set -e
 
 echo "== Aggiornamento pacchetti =="
 
-sudo apt update
+sudo apt-get \
+    -o Acquire::Retries=5 \
+    -o Acquire::http::Timeout=30 \
+    -o Acquire::https::Timeout=30 \
+    update
 
 
 echo "== Installazione dipendenze Proton =="
 
-sudo apt install -y \
+sudo DEBIAN_FRONTEND=noninteractive apt-get \
+    -o Acquire::Retries=5 \
+    -o Acquire::http::Timeout=30 \
+    -o Acquire::https::Timeout=30 \
+    install -y \
     build-essential \
     gcc \
     g++ \
