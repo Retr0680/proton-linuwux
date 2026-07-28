@@ -73,24 +73,26 @@ jobs:
           echo "Archivio: $archive"
           echo "Tag Release: $release_tag"
 
+          base_release="${release_tag%-LinUwUx}"
+
           notes="$(
               printf '%s\n' \
-                  '# Proton LinUwUx' \
-                  '' \
                   'Automatically built from the latest Proton-GE release.' \
                   '' \
                   '## Base' \
-                  "- $release_tag" \
+                  '' \
+                  "- $base_release" \
                   '' \
                   '## Patch' \
-                  '- LinUwUx.patch' \
+                  '' \
+                  '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
                   '' \
                   '## Credits' \
                   '' \
-                  '- Proton-GE: [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom)' \
-                  '- LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
+                  'Proton-GE: [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom)' \
+                  'LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
                   '' \
-                  'Built automatically with GitHub Actions.'
+                  '_Built automatically with GitHub Actions._'
           )"
 
           if gh release view "$release_tag" >/dev/null 2>&1
