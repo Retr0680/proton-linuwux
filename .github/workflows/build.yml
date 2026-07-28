@@ -42,11 +42,10 @@ jobs:
         run: |
           ./scripts/build-ge.sh
 
-      - name: Upload build logs
-        if: always()
+      - name: Upload Proton-GE artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: proton-build-workdir
-          path: |
-            work/
-            output/
+          name: GE-Proton-LinUwUx
+          path: output/
+          if-no-files-found: error
