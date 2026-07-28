@@ -77,8 +77,10 @@ cd build
 
 echo "== Download preventivo xrandr =="
 
-XRANDR_TARBALL="$WORKDIR/proton-ge-custom/contrib/xrandr-1.5.4.tar.xz"
+XRANDR_DIR="$WORKDIR/proton-ge-custom/contrib"
+XRANDR_TARBALL="$XRANDR_DIR/xrandr-1.5.4.tar.xz"
 
+mkdir -p "$XRANDR_DIR"
 rm -f "$XRANDR_TARBALL"
 
 wget \
@@ -90,10 +92,6 @@ wget \
     "https://xorg.freedesktop.org/archive/individual/app/xrandr-1.5.4.tar.xz"
 
 test -s "$XRANDR_TARBALL"
-
-echo "== Compilazione =="
-
-make redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 
 echo "== Copia risultato =="
