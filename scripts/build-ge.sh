@@ -66,24 +66,6 @@ do
     sleep "$wait_seconds"
 done
 
-echo "== Diagnostica openfst =="
-
-echo "Tag Proton-GE: $GE_TAG"
-
-echo "Commit Proton-GE:"
-git rev-parse HEAD
-
-echo "Commit submodule openfst:"
-git submodule status openfst || true
-
-echo "Contenuto della cartella openfst:"
-ls -la openfst
-
-echo "Ricerca configure.ac:"
-find openfst -maxdepth 2 \
-    \( -name "configure.ac" -o -name "CMakeLists.txt" \) \
-    -print
-
 echo "== Preparazione Proton =="
 
 ./patches/protonprep-valve-staging.sh
