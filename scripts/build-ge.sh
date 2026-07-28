@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -79,7 +79,7 @@ echo "== Compilazione =="
 
 export WGETRC="$ROOT_DIR/wgetrc"
 
-make redist
+make redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 
 echo "== Copia risultato =="
