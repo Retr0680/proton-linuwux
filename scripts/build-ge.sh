@@ -92,21 +92,24 @@ cd build
 
 echo "== Download preventivo xrandr =="
 
+XRANDR_VERSION="1.5.4"
+XRANDR_FILENAME="xrandr-${XRANDR_VERSION}.tar.xz"
 XRANDR_DIR="$WORKDIR/proton-ge-custom/contrib"
-XRANDR_TARBALL="$XRANDR_DIR/xrandr-1.5.4.tar.xz"
+XRANDR_TARBALL="$XRANDR_DIR/$XRANDR_FILENAME"
+XRANDR_URL="https://xorg.freedesktop.org/archive/individual/app/$XRANDR_FILENAME"
+XRANDR_SHA256="2cafccb2aaf2491a4068676117a0d4f90ab307724b96fffc54cd1da953779400"
 
 mkdir -p "$XRANDR_DIR"
 rm -f "$XRANDR_TARBALL"
 
 wget \
     --https-only \
-    --no-check-certificate \
     --tries=5 \
     --timeout=30 \
     -O "$XRANDR_TARBALL" \
-    "https://xorg.freedesktop.org/archive/individual/app/xrandr-1.5.4.tar.xz"
+    "$XRANDR_URL"
 
-test -s "$XRANDR_TARBALL"
+echo "$XRANDR_SHA256  $XRANDR_TARBALL" | sha256sum --check -
 
 echo "== Compilazione =="
 
