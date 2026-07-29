@@ -35,29 +35,26 @@ fi
 CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
 CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
 
-CACHYOS_BRANCH_VERSION="${CACHYOS_VERSION//-/_}"
-CACHYOS_BRANCH="cachyos_${CACHYOS_BRANCH_VERSION}/main"
-
 BUILD_NAME="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx"
 
-echo "Branch sorgente: $CACHYOS_BRANCH"
+echo "Tag sorgente: $CACHYOS_TAG"
 echo "Nome build: $BUILD_NAME"
 
-echo "== Verifica esistenza branch =="
+echo "== Verifica esistenza tag =="
 
 if ! git ls-remote \
     --exit-code \
-    --heads \
+    --tags \
     https://github.com/CachyOS/proton-cachyos.git \
-    "$CACHYOS_BRANCH" \
+    "refs/tags/$CACHYOS_TAG" \
     >/dev/null
 then
-    echo "Errore: il branch sorgente non esiste:"
-    echo "$CACHYOS_BRANCH"
+    echo "Errore: il tag sorgente non esiste:"
+    echo "$CACHYOS_TAG"
     exit 1
 fi
 
-echo "Branch Proton-CachyOS verificato correttamente."
+echo "Tag Proton-CachyOS verificato correttamente."
 
 echo "== Clonazione Proton-CachyOS =="
 
@@ -66,7 +63,7 @@ cd "$WORKDIR"
 rm -rf proton-cachyos
 
 git clone \
-    --branch "$CACHYOS_BRANCH" \
+    --branch "$CACHYOS_TAG" \
     --single-branch \
     --tags \
     https://github.com/CachyOS/proton-cachyos.git \
