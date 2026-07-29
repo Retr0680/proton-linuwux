@@ -145,23 +145,33 @@ make redist
 
 echo "== Creazione archivio finale =="
 
-REDIST_DIR="$BUILD_DIR/redist"
+UPSTREAM_ARCHIVE="$BUILD_DIR/$BUILD_NAME.tar.xz"
 PACKAGE_DIR="$WORKDIR/$BUILD_NAME"
 ARCHIVE="$OUTPUT/$BUILD_NAME.tar.gz"
 
-if [[ ! -d "$REDIST_DIR" ]]
+if [[ ! -f "$UPSTREAM_ARCHIVE" ]]
 then
-    echo "Errore: directory redist non trovata:"
-    echo "$REDIST_DIR"
+    echo "Errore: archivio prodotto da Proton-CachyOS non trovato:"
+    echo "$UPSTREAM_ARCHIVE"
     exit 1
 fi
 
 rm -rf "$PACKAGE_DIR"
-mkdir -p "$PACKAGE_DIR"
-
-cp -a "$REDIST_DIR"/. "$PACKAGE_DIR"/
-
 rm -f "$ARCHIVE"
+
+echo "Estrazione archivio Proton-CachyOS..."
+
+tar -C "$WORKDIR" \
+    -xJf "$UPSTREAM_ARCHIVE"
+
+if [[ ! -d "$PACKAGE_DIR" ]]
+then
+    echo "Errore: directory della build estratta non trovata:"
+    echo "$PACKAGE_DIR"
+    exit 1
+fi
+
+echo "Conversione in archivio tar.gz..."
 
 tar -C "$WORKDIR" \
     -czf "$ARCHIVE" \
