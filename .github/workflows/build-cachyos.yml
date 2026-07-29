@@ -1,0 +1,123 @@
+name: Build Proton-CachyOS LinUwUx
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-cachyos:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Free disk space
+        run: |
+          df -h
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+
+          docker system prune -af || true
+
+          df -h
+
+      - name: Check Docker
+        run: |
+          which docker || true
+          docker --version || true
+          docker info || true
+
+      - name: Install dependencies
+        run: |
+          ./scripts/install-deps.sh
+
+      - name: Build Proton-CachyOS
+        env:
+          CCACHE_DISABLE: "1"
+        run: |
+          ./scripts/build-cachyos.sh
+
+      - name: Upload Proton-CachyOS artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Proton-CachyOS-LinUwUx
+          path: output/proton-cachyos-*-slr-LinUwUx.tar.gz
+          if-no-files-found: error
+
+      - name: Publish Proton-CachyOS release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+
+          archives=(output/proton-cachyos-*-slr-LinUwUx.tar.gz)
+
+          if [ "${#archives[@]}" -ne 1 ]
+          then
+            echo "Errore: atteso esattamente un archivio .tar.gz in output/."
+            ls -lah output/
+            exit 1
+          fi
+
+          archive="${archives[0]}"
+          filename="$(basename "$archive")"
+          release_tag="${filename%.tar.gz}"
+          base_release="${release_tag%-LinUwUx}"
+
+          echo "Archivio: $archive"
+          echo "Tag Release: $release_tag"
+
+          notes="$(
+            printf '%s\n' \
+              'Automatically built from the latest Proton-CachyOS release.' \
+              '' \
+              '## Base' \
+              '' \
+              "- $base_release" \
+              '' \
+              '## Patch' \
+              '' \
+              '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
+              '' \
+              '## Credits' \
+              '' \
+              'Proton-CachyOS: [CachyOS/proton-cachyos](https://github.com/CachyOS/proton-cachyos)' \
+              'LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
+              '' \
+              '_Built automatically with GitHub Actions._'
+          )"
+
+          if gh release view "$release_tag" >/dev/null 2>&1
+          then
+            echo "La Release esiste già: aggiorno descrizione e file allegato."
+
+            gh release edit \
+              "$release_tag" \
+              --title "$release_tag" \
+              --notes "$notes" \
+              --latest
+
+            gh release upload \
+              "$release_tag" \
+              "$archive" \
+              --clobber
+          else
+            echo "Creazione nuova Release."
+
+            gh release create \
+              "$release_tag" \
+              "$archive" \
+              --title "$release_tag" \
+              --notes "$notes" \
+              --latest
+          fi
