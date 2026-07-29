@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">
-    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Build" alt="Latest Build">
+    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Version" alt="Latest Version">
   </a>
   <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml">
     <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml/badge.svg" alt="Proton-GE Build">
