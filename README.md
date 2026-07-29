@@ -8,16 +8,16 @@
 
 <p align="center">
   <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">
-    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Release" alt="Latest Release">
-  </a>
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/stargazers">
-    <img src="https://img.shields.io/github/stars/xshaduwulfx/proton-linuwux?style=flat" alt="GitHub Stars">
+    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Version" alt="Latest Version">
   </a>
   <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml">
     <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml/badge.svg" alt="Proton-GE Build">
   </a>
   <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml">
     <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml/badge.svg" alt="Proton-CachyOS Build">
+  </a>
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/stargazers">
+    <img src="https://img.shields.io/github/stars/xshaduwulfx/proton-linuwux?style=flat" alt="GitHub Stars">
   </a>
 </p>
 
