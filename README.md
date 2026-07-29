@@ -1,46 +1,161 @@
-# Proton-LinUwUx
+<p align="center">
+  <img src="assets/banner.svg" alt="Proton-LinUwUx" width="900">
+</p>
 
-Custom Proton builds patched with "**LinUwUx.patch**" from [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989).
+<p align="center">
+  Automated Proton-GE and Proton-CachyOS builds patched with <strong>LinUwUx.patch</strong>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">
+    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Release" alt="Latest Release">
+  </a>
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/stargazers">
+    <img src="https://img.shields.io/github/stars/xshaduwulfx/proton-linuwux?style=flat" alt="GitHub Stars">
+  </a>
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml">
+    <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml/badge.svg" alt="Proton-GE Build">
+  </a>
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml">
+    <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml/badge.svg" alt="Proton-CachyOS Build">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">Downloads</a>
+  ·
+  <a href="#features">Features</a>
+  ·
+  <a href="#installation">Installation</a>
+  ·
+  <a href="#faq">FAQ</a>
+</p>
+
+---
+
+## About
+
+**Proton-LinUwUx** provides automated x86_64 builds of Proton-GE and Proton-CachyOS patched with `LinUwUx.patch`.
+
+The patch originates from the relevant discussion on [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989).
+
+> [!IMPORTANT]
+> These builds contain no additional performance tweaks or unrelated changes.  
+> The only project-specific modification is the application of `LinUwUx.patch`.
 
 ## Features
 
-- **Proton-CachyOS** latest x86_64 builds patched in order to make HV bypass working on Linux.
-- **Proton-GE** latest x86_64 builds patched in order to make HV bypass working on Linux.
+- Automatically tracks new upstream Proton-GE and Proton-CachyOS releases.
+- Builds and publishes patched releases through GitHub Actions.
+- Provides ready-to-use x86_64 archives.
+- Keeps Proton-GE and Proton-CachyOS as separate release variants.
+- Allows manual workflow runs when a rebuild is required.
 
-**NO additional performance tweaking nor other changes have been done apart LinUwUx's patching!**
+## Available builds
+
+| Build | Upstream project | Architecture | Description |
+|---|---|---:|---|
+| **Proton-GE LinUwUx** | [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom) | x86_64 | Latest supported Proton-GE release patched with `LinUwUx.patch`. |
+| **Proton-CachyOS LinUwUx** | [CachyOS/proton-cachyos](https://github.com/CachyOS/proton-cachyos) | x86_64 | Latest supported Proton-CachyOS release patched with `LinUwUx.patch`. |
 
 ## Downloads
 
-Grab the latest patched builds from the [Releases](../../releases) section.
+Ready-to-use builds are available from the project’s:
+
+<p align="center">
+  <strong>
+    <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">GitHub Releases</a>
+  </strong>
+</p>
+
+Each release archive contains a complete compatibility-tool directory that can be extracted into a supported Steam compatibility-tools location.
+
+## Installation
+
+### Steam
+
+1. Download the desired archive from [GitHub Releases](https://github.com/xshaduwulfx/proton-linuwux/releases).
+2. Extract it into one of the following directories:
+
+   ```text
+   ~/.steam/root/compatibilitytools.d/
+   ~/.local/share/Steam/compatibilitytools.d/
+   ~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/
+   ```
+
+3. Create the selected directory if it does not already exist.
+4. Restart Steam.
+5. Right-click the game and open **Properties → Compatibility**.
+6. Enable **Force the use of a specific Steam Play compatibility tool**.
+7. Select the installed Proton-LinUwUx build.
+
+### Faugus Launcher
+
+1. Extract the build into one of the Steam compatibility-tools directories listed above.
+2. When using the Flatpak version of Faugus Launcher, open **Flatseal**.
+3. Select Faugus Launcher and add the extraction path under **Filesystems → Other files**.
+4. Open:
+
+   ```text
+   ~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json
+   ```
+
+5. Find the relevant game entry and set its `"runner"` value to the absolute path of the extracted Proton directory.
+
+> [!NOTE]
+> The runner path may need to be set again after adding a game or changing its launch options.
 
 ## FAQ
 
-### How do I install and use these Proton builds?
-
-- **On Steam:**
-    - Extract the builds to your Steam compatibility folder (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`).
-    - Restart Steam.
-    - Right-click your game, go to **Properties > Compatibility**, check **Force the use of a specific Steam Play compatibility tool**, and select your build.
-
-- **On Faugus Launcher:**
-    - Extract the builds to the same Steam compatibility folder as above.
-    - If using the Flatpak version of Faugus, open **Flatseal**, select Faugus, go to **Filesystems > Other files**, and add the path where you extracted the builds.
-    - Open `~/.var/app/io.github.Faugus.faugus-launcher/data/faugus-launcher/games.json`, find your game, locate `"runner"`, and paste the absolute path to your custom Proton folder inside the quotes. (**Remember to repeat this step each time you add a new game or modify launch options both for new and already existing games**).
-
 ### What is the difference between Proton-CachyOS and Proton-GE?
-Both are patched for the HV bypass, but they are based on different underlying upstream projects (CachyOS builds or Proton-GE). 
 
-### Do these work on immutable distros (like Steam Deck, Fedora Silverblue, Bazzite)?
-Yes, but since the root file system is read-only, you must place the compatibility tool inside your home directory (`~/.steam/root/compatibilitytools.d/`, `~/.local/share/Steam/compatibilitytools.d/` or `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/`). Do not try to write to `/usr/share/steam`.
+Both variants receive the same project-specific patch, but they are based on different upstream Proton projects.
+
+Proton-GE and Proton-CachyOS may contain different Wine patches, components, defaults and compatibility changes. Results can therefore vary between games.
+
+### Do these builds work on immutable distributions?
+
+Yes. This includes systems such as Steam Deck, Fedora Silverblue and Bazzite.
+
+Install the compatibility tool inside your home directory, for example:
+
+```text
+~/.steam/root/compatibilitytools.d/
+~/.local/share/Steam/compatibilitytools.d/
+~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/
+```
+
+Do not attempt to install it into a read-only system directory such as `/usr/share/steam`.
 
 ### Does the hypervisor bypass work on ARM devices?
-No. Translators like FEX-Emu lack `cpuid_fault` support and only handle user-mode instructions. Denuvo also checks things that emulators cannot spoof, like floating point division accuracy. ARM users should look into traditional cracks or offline activations instead.
 
-### Does it work with all Denuvo games?
-The goal is to bypass Hypervisor checks, but compatibility depends on the specific game and Denuvo updates. Check the original thread on [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989) and the specific game threads to see if an hypervisor crack is available for them.
+No. Translators such as FEX-Emu do not currently provide all the required behavior, including `cpuid_fault` support, and user-mode emulation cannot reproduce every property checked by some protection systems.
 
-### Is there a risk of getting banned?
-Use these patches at your own risk. Modifying Proton files or bypassing anti-tamper systems can violate Steam's Terms of Service.
+These builds target **x86_64 Linux systems only**.
+
+### Does it work with every Denuvo-protected game?
+
+No compatibility guarantee can be made.
+
+The patch targets hypervisor-related checks, but results depend on the game, its protection version and any game-specific requirements. Consult the original [cs.rin.ru discussion](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989) and the relevant game thread for additional information.
+
+### Is there a risk of being banned?
+
+Use these builds at your own risk.
+
+Modified compatibility tools or attempts to bypass anti-tamper systems may violate the terms of service of a game, platform or online service. Avoid using modified builds in competitive or anti-cheat-protected multiplayer environments.
+
+### How often are new releases checked?
+
+The GitHub Actions workflows check the upstream Proton-GE and Proton-CachyOS projects every hour.
+
+When a new upstream release is detected and no corresponding Proton-LinUwUx release exists, the appropriate build workflow starts automatically.
+
+## Disclaimer
+
+This repository is an independent community project and is not affiliated with Valve, CodeWeavers, GloriousEggroll, CachyOS or any game publisher.
+
+All trademarks and project names belong to their respective owners.
 
 ## Credits
 
@@ -48,4 +163,4 @@ Use these patches at your own risk. Modifying Proton files or bypassing anti-tam
 - **DenuvOwO Team**
 - **GloriousEggroll**
 - **CachyOS Team**
-- **Valve** (Proton)
+- **Valve** and **CodeWeavers** for Proton and Wine development
