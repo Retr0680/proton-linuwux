@@ -3,6 +3,9 @@ name: Build Proton-CachyOS LinUwUx
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "17 5 * * *"
+
 jobs:
   build-cachyos:
     runs-on: ubuntu-24.04
@@ -14,10 +17,57 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check whether a new build is needed
+        id: release-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CACHYOS_TAG="$(
+            curl -fsSL \
+              https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest |
+            python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
+          )"
+
+          if [[ -z "$CACHYOS_TAG" ]]
+          then
+            echo "Errore: impossibile rilevare l'ultima release Proton-CachyOS."
+            exit 1
+          fi
+
+          CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
+          CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
+
+          RELEASE_TAG="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx"
+
+          echo "Release upstream: $CACHYOS_TAG"
+          echo "Release LinUwUx prevista: $RELEASE_TAG"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]
+          then
+            echo "Avvio manuale: la build verrà eseguita comunque."
+            echo "should-build=true" >> "$GITHUB_OUTPUT"
+
+          elif git ls-remote \
+            --exit-code \
+            --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" \
+            "refs/tags/$RELEASE_TAG" \
+            >/dev/null
+          then
+            echo "La Release LinUwUx esiste già: nessuna compilazione necessaria."
+            echo "should-build=false" >> "$GITHUB_OUTPUT"
+
+          else
+            echo "Nuova Release rilevata: avvio della compilazione."
+            echo "should-build=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Make scripts executable
+        if: steps.release-check.outputs.should-build == 'true'
         run: chmod +x scripts/*.sh
 
       - name: Free disk space
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           df -h
 
@@ -30,23 +80,26 @@ jobs:
           df -h
 
       - name: Check Docker
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           which docker || true
           docker --version || true
           docker info || true
 
       - name: Install dependencies
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           ./scripts/install-deps.sh
 
       - name: Build Proton-CachyOS
+        if: steps.release-check.outputs.should-build == 'true'
         env:
           CCACHE_DISABLE: "1"
         run: |
           ./scripts/build-cachyos.sh
 
       - name: Upload Proton-CachyOS artifact
-        if: success()
+        if: steps.release-check.outputs.should-build == 'true' && success()
         uses: actions/upload-artifact@v4
         with:
           name: Proton-CachyOS-LinUwUx
@@ -54,7 +107,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish Proton-CachyOS release
-        if: success()
+        if: steps.release-check.outputs.should-build == 'true' && success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
