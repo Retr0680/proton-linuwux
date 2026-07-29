@@ -3,6 +3,9 @@ name: Build Proton-GE LinUwUx
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "37 5 * * *"
+
 jobs:
   build-ge:
     runs-on: ubuntu-24.04
@@ -14,36 +17,91 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check whether a new build is needed
+        id: release-check
+        run: |
+          GE_TAG="$(
+            curl -fsSL \
+              https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest |
+            python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
+          )"
+
+          if [[ -z "$GE_TAG" ]]
+          then
+            echo "Errore: impossibile rilevare l'ultima release Proton-GE."
+            exit 1
+          fi
+
+          if [[ "$GE_TAG" != GE-Proton* ]]
+          then
+            echo "Errore: il tag rilevato non sembra appartenere a Proton-GE:"
+            echo "$GE_TAG"
+            exit 1
+          fi
+
+          RELEASE_TAG="${GE_TAG}-LinUwUx"
+
+          echo "Release upstream: $GE_TAG"
+          echo "Release LinUwUx prevista: $RELEASE_TAG"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]
+          then
+            echo "Avvio manuale: la build verrà eseguita comunque."
+            echo "should-build=true" >> "$GITHUB_OUTPUT"
+
+          elif git ls-remote \
+            --exit-code \
+            --tags \
+            "https://github.com/${GITHUB_REPOSITORY}.git" \
+            "refs/tags/$RELEASE_TAG" \
+            >/dev/null
+          then
+            echo "La Release LinUwUx esiste già: nessuna compilazione necessaria."
+            echo "should-build=false" >> "$GITHUB_OUTPUT"
+
+          else
+            echo "Nuova Release rilevata: avvio della compilazione."
+            echo "should-build=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Make scripts executable
+        if: steps.release-check.outputs.should-build == 'true'
         run: chmod +x scripts/*.sh
 
       - name: Free disk space
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           df -h
+
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /opt/ghc
+
           docker system prune -af || true
+
           df -h
 
       - name: Check Docker
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           which docker || true
           docker --version || true
           docker info || true
 
       - name: Install dependencies
+        if: steps.release-check.outputs.should-build == 'true'
         run: |
           ./scripts/install-deps.sh
 
       - name: Build Proton-GE
+        if: steps.release-check.outputs.should-build == 'true'
         env:
           CCACHE_DISABLE: "1"
         run: |
           ./scripts/build-ge.sh
 
       - name: Upload Proton-GE artifact
-        if: success()
+        if: steps.release-check.outputs.should-build == 'true' && success()
         uses: actions/upload-artifact@v4
         with:
           name: GE-Proton-LinUwUx
@@ -51,7 +109,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish Proton-GE release
-        if: success()
+        if: steps.release-check.outputs.should-build == 'true' && success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -61,67 +119,66 @@ jobs:
 
           if [ "${#archives[@]}" -ne 1 ]
           then
-              echo "Errore: atteso esattamente un archivio .tar.gz in output/."
-              ls -lah output/
-              exit 1
+            echo "Errore: atteso esattamente un archivio .tar.gz in output/."
+            ls -lah output/
+            exit 1
           fi
 
           archive="${archives[0]}"
           filename="$(basename "$archive")"
           release_tag="${filename%.tar.gz}"
+          base_release="${release_tag%-LinUwUx}"
 
           echo "Archivio: $archive"
           echo "Tag Release: $release_tag"
 
-          base_release="${release_tag%-LinUwUx}"
-
           notes="$(
-              printf '%s\n' \
-                  'Automatically built from the latest Proton-GE release.' \
-                  '' \
-                  '## Base' \
-                  '' \
-                  "- $base_release" \
-                  '' \
-                  '## Patch' \
-                  '' \
-                  '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
-                  '' \
-                  '## Credits' \
-                  '' \
-                  'Proton-GE: [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom)' \
-                  'LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
-                  '' \
-                  '_Built automatically with GitHub Actions._'
+            printf '%s\n' \
+              'Automatically built from the latest Proton-GE release.' \
+              '' \
+              '## Base' \
+              '' \
+              "- $base_release" \
+              '' \
+              '## Patch' \
+              '' \
+              '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
+              '' \
+              '## Credits' \
+              '' \
+              'Proton-GE: [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom)' \
+              'LinUwUx: [A Hypervisor(-less) Denuvo bypass for Linux](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989)' \
+              '' \
+              '_Built automatically with GitHub Actions._'
           )"
 
           if gh release view "$release_tag" >/dev/null 2>&1
           then
-              echo "La Release esiste già: aggiorno descrizione e file allegato."
+            echo "La Release esiste già: aggiorno descrizione e file allegato."
 
-              gh release edit \
-                  "$release_tag" \
-                  --title "$release_tag" \
-                  --notes "$notes" \
-                  --latest
+            gh release edit \
+              "$release_tag" \
+              --title "$release_tag" \
+              --notes "$notes" \
+              --latest
 
-              gh release upload \
-                  "$release_tag" \
-                  "$archive" \
-                  --clobber
+            gh release upload \
+              "$release_tag" \
+              "$archive" \
+              --clobber
           else
-              echo "Creazione nuova Release."
+            echo "Creazione nuova Release."
 
-              gh release create \
-                  "$release_tag" \
-                  "$archive" \
-                  --title "$release_tag" \
-                  --notes "$notes" \
-                  --latest
+            gh release create \
+              "$release_tag" \
+              "$archive" \
+              --title "$release_tag" \
+              --notes "$notes" \
+              --latest
           fi
 
       - name: Upload diagnostic logs
-        if: always()
+        if: always() && steps.release-check.outputs.should-build == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: GE-Proton-build-logs
