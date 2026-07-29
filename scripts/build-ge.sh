@@ -110,7 +110,7 @@ test -s "$XRANDR_TARBALL"
 
 echo "== Compilazione =="
 
-make redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
+make V=1 VERBOSE=1 redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 echo "== Copia risultato =="
 
