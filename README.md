@@ -107,21 +107,21 @@ Each release archive contains a complete compatibility-tool directory that can b
 
 ## FAQ
 
+### How does the Hypervisor (HV) bypass work? What are the requirements? What additional components are required besides these patched Proton builds?
+
+**These patched Proton builds are a required part of the setup, but they are not the complete solution.**
+
+This repository only builds and distributes the patched Proton variants required for the HV bypass to work properly. The HV bypass itself, its configuration, additional requirements, and the overall setup are **outside the scope of this project**.
+
+If you're looking for information about the complete setup, requirements, compatibility or troubleshooting, please refer to the dedicated **[cs.rin.ru discussion thread](https://cs.rin.ru/forum/viewtopic.php?f=14&t=120352)**.
+
+For questions regarding the HV bypass itself or its setup, please use the discussion thread above rather than opening an issue in this repository.
+
 ### What is the difference between Proton-CachyOS and Proton-GE?
 
 Both variants receive the same project-specific patch, but they are based on different upstream Proton projects.
 
 Proton-GE and Proton-CachyOS may contain different Wine patches, components, defaults and compatibility changes. Results can therefore vary between games.
-
-### How does the Hypervisor (HV) bypass work? What are the requirements? What else do I need besides these patched Proton builds?
-
-**These patched Proton builds are a required part of the setup, but they are not the complete solution.**
-
-This repository only builds and distributes the patched Proton variants required for the HV bypass to work. The HV bypass itself, its configuration, additional requirements and the overall setup are **outside the scope of this project**.
-
-If you're looking for information about the complete procedure, requirements, compatibility or troubleshooting, please refer to the dedicated **[cs.rin.ru discussion thread](https://cs.rin.ru/forum/viewtopic.php?f=14&t=120352)**.
-
-For questions regarding the HV bypass itself or its setup, please use the discussion thread above rather than opening an issue in this repository.
 
 ### Do these builds work on immutable distributions?
 
