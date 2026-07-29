@@ -137,7 +137,7 @@ echo "== Configurazione Proton-CachyOS =="
 
 "$WORKDIR/proton-cachyos/configure.sh" \
     --build-name="$BUILD_NAME" \
-    --enable-cache
+    --enable-ccache
 
 echo "== Compilazione Proton-CachyOS =="
 
