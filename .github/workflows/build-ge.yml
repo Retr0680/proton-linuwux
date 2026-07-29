@@ -100,6 +100,31 @@ jobs:
         run: |
           ./scripts/build-ge.sh
 
+      - name: Generate Proton-GE SHA-256 checksum
+        if: steps.release-check.outputs.should-build == 'true' && success()
+        run: |
+          shopt -s nullglob
+
+          archives=(output/GE-Proton*-LinUwUx.tar.gz)
+
+          if [ "${#archives[@]}" -ne 1 ]
+          then
+            echo "Errore: atteso esattamente un archivio .tar.gz in output/."
+            ls -lah output/
+            exit 1
+          fi
+
+          archive="${archives[0]}"
+          checksum="${archive}.sha256"
+
+          (
+            cd "$(dirname "$archive")"
+            sha256sum "$(basename "$archive")" > "$(basename "$checksum")"
+          )
+
+          echo "Checksum generato:"
+          cat "$checksum"
+
       - name: Upload Proton-GE artifact
         if: steps.release-check.outputs.should-build == 'true' && success()
         uses: actions/upload-artifact@v4
@@ -125,6 +150,15 @@ jobs:
           fi
 
           archive="${archives[0]}"
+          checksum="${archive}.sha256"
+
+          if [ ! -f "$checksum" ]
+          then
+            echo "Errore: file SHA-256 non trovato:"
+            echo "$checksum"
+            exit 1
+          fi
+
           filename="$(basename "$archive")"
           release_tag="${filename%.tar.gz}"
           base_release="${release_tag%-LinUwUx}"
@@ -165,6 +199,7 @@ jobs:
             gh release upload \
               "$release_tag" \
               "$archive" \
+              "$checksum" \
               --clobber
           else
             echo "Creazione nuova Release."
@@ -172,6 +207,7 @@ jobs:
             gh release create \
               "$release_tag" \
               "$archive" \
+              "$checksum" \
               --title "$release_tag" \
               --notes "$notes" \
               --latest
