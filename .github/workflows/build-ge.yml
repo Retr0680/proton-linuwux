@@ -95,8 +95,6 @@ jobs:
 
       - name: Build Proton-GE
         if: steps.release-check.outputs.should-build == 'true'
-        env:
-          CCACHE_DISABLE: "1"
         run: |
           ./scripts/build-ge.sh
 
