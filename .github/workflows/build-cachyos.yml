@@ -94,7 +94,6 @@ jobs:
       - name: Build Proton-CachyOS
         if: steps.release-check.outputs.should-build == 'true'
         env:
-          CCACHE_DISABLE: "1"
         run: |
           ./scripts/build-cachyos.sh
 
