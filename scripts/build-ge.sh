@@ -74,6 +74,13 @@ echo "== Applicazione LinUwUx.patch =="
 
 patch -p1 < "$ROOT_DIR/LinUwUx.patch"
 
+echo "== Ricerca branding interno Wine =="
+
+grep -RIn \
+    --exclude-dir=.git \
+    -E 'Proton-GE-Proton|with-package-version|PACKAGE_VERSION' \
+    . || true
+
 echo "== Configurazione build =="
 
 mkdir -p build
