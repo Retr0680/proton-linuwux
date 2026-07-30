@@ -93,7 +93,6 @@ jobs:
 
       - name: Build Proton-CachyOS
         if: steps.release-check.outputs.should-build == 'true'
-        env:
         run: |
           ./scripts/build-cachyos.sh
 
