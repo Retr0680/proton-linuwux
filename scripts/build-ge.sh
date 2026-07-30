@@ -74,11 +74,6 @@ echo "== Applicazione LinUwUx.patch =="
 
 patch -p1 < "$ROOT_DIR/LinUwUx.patch"
 
-echo "== Disabilito ccache =="
-
-export CCACHE_DISABLE=1
-
-
 echo "== Configurazione build =="
 
 mkdir -p build
