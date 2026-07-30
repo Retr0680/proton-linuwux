@@ -73,7 +73,7 @@ source "$HOME/.cargo/env"
 
 echo "== Installazione tool Rust =="
 
-cargo install cbindgen || true
+cargo install cbindgen
 
 
 echo "== Pulizia spazio disco =="
