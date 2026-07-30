@@ -127,7 +127,7 @@ echo "$XRANDR_SHA256  $XRANDR_TARBALL" | sha256sum --check -
 
 echo "== Compilazione =="
 
-make V=1 VERBOSE=1 redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
+make -j1 V=1 VERBOSE=1 redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 echo "== Copia risultato =="
 
