@@ -72,7 +72,26 @@ echo "== Preparazione Proton =="
 
 echo "== Applicazione LinUwUx.patch =="
 
-patch -p1 < "$ROOT_DIR/LinUwUx.patch"
+PATCH_FILE="$ROOT_DIR/LinUwUx.patch"
+
+if [[ ! -f "$PATCH_FILE" ]]
+then
+    echo "Errore: LinUwUx.patch non trovato:"
+    echo "$PATCH_FILE"
+    exit 1
+fi
+
+echo "Verifica preliminare della patch..."
+
+if ! patch --dry-run -p1 < "$PATCH_FILE"
+then
+    echo "Errore: LinUwUx.patch non è compatibile con questa versione di Proton-GE."
+    exit 1
+fi
+
+patch -p1 < "$PATCH_FILE"
+
+echo "LinUwUx.patch applicata correttamente."
 
 echo "== Configurazione build =="
 
