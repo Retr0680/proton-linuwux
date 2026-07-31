@@ -37,11 +37,14 @@
 
 **Proton-LinUwUx** provides automated x86_64 builds of Proton-GE and Proton-CachyOS patched with `LinUwUx.patch`.
 
+`LinUwUx.patch` is developed and maintained by **LinUwUx**.  
+This project only automates the build and distribution of Proton-GE and Proton-CachyOS with the original patch applied.
+
 The patch originates from the relevant discussion on [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989).
 
 > [!IMPORTANT]
 > These builds contain no additional performance tweaks or unrelated changes.  
-> The only project-specific modification is the application of `LinUwUx.patch`.
+> The only project-specific modification is the application of the original `LinUwUx.patch` developed by **LinUwUx**.
 
 ## Features
 
@@ -169,7 +172,7 @@ All trademarks and project names belong to their respective owners.
 
 ## Credits
 
-- **LinUwUx Team**
+- **LinUwUx** (original patch author)
 - **DenuvOwO Team**
 - **GloriousEggroll**
 - **CachyOS Team**
