@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "37 * * * *"
 
+concurrency:
+  group: build-ge
+  cancel-in-progress: false
+
 jobs:
   build-ge:
     runs-on: ubuntu-24.04
