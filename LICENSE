@@ -1,0 +1,34 @@
+Proton LinUwUx Licensing
+========================
+
+This repository contains code and materials under multiple licenses.
+
+Original project code
+---------------------
+
+Unless otherwise noted, original code created specifically for the
+Proton LinUwUx project, including build scripts and CI workflows, is
+licensed under the MIT License.
+
+See LICENSES/MIT.txt.
+
+Third-party and derived code
+----------------------------
+
+LinUwUx.patch contains modifications to third-party projects and is not
+covered in its entirety by the MIT License above.
+
+Portions modifying Wine are derived from and intended to modify Wine
+source code and remain subject to Wine's applicable licensing terms,
+including the GNU Lesser General Public License version 2.1 or later
+(LGPL-2.1-or-later).
+
+Portions modifying Valve's Proton are derived from and intended to
+modify Proton source code and remain subject to the applicable Proton
+license.
+
+Third-party components retain their respective copyright notices and
+licenses.
+
+Attribution and provenance information for the LinUwUx patch is
+documented in NOTICE.md.
