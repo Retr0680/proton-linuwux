@@ -92,6 +92,38 @@ Each release archive contains a complete compatibility-tool directory that can b
 6. Enable **Force the use of a specific Steam Play compatibility tool**.
 7. Select the installed Proton-LinUwUx build.
 
+### Heroic Games Launcher
+
+1. Download the desired archive from **GitHub Releases**.
+
+2. Extract the Proton-LinUwUx directory into the appropriate Heroic Proton directory:
+
+   **Native installation:**
+
+   ```text
+   ~/.config/heroic/tools/proton/
+   ```
+
+   **Flatpak installation:**
+
+   ```text
+   ~/.var/app/com.heroicgameslauncher.hgl/config/heroic/tools/proton/
+   ```
+
+3. Create the selected directory if it does not already exist.
+
+4. Restart Heroic Games Launcher.
+
+5. Select the desired game from the **Library**.
+
+6. Open the game's **Settings**.
+
+7. Open the **Wine** section.
+
+8. Under **Wine Version**, select the installed Proton-LinUwUx build.
+
+9. Launch the game.
+
 ### Faugus Launcher
 
 1. Extract the build into one of the Steam compatibility-tools directories listed above.
@@ -136,6 +168,7 @@ Install the compatibility tool inside your home directory, for example:
 ~/.steam/root/compatibilitytools.d/
 ~/.local/share/Steam/compatibilitytools.d/
 ~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/
+~/.var/app/com.heroicgameslauncher.hgl/config/heroic/tools/proton/
 ```
 
 Do not attempt to install it into a read-only system directory such as `/usr/share/steam`.
