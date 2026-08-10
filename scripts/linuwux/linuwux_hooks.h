@@ -202,4 +202,111 @@ static void detect_cpu_vendor(void)
     /* Sorry Zhaoxin/Hygon CPU owners :( */
 }
 
+static int linuwux_handle_cpuid(siginfo_t *siginfo, ucontext_t *ucontext)
+{
+    unsigned int leaf;
+    unsigned int subleaf;
+    unsigned char *rip;
+
+    rip = (unsigned char *)ucontext->uc_mcontext.gregs[REG_RIP];
+    leaf = ucontext->uc_mcontext.gregs[REG_RAX];
+    subleaf = ucontext->uc_mcontext.gregs[REG_RCX];
+
+    if ((siginfo->si_code == SI_KERNEL || leaf == 0x336933) &&
+        rip[0] == 0x0f && rip[1] == 0xa2)
+    {
+        switch (leaf)
+        {
+            case 1:
+                ucontext->uc_mcontext.gregs[REG_RAX] = spoof_leaf1_eax;
+                ucontext->uc_mcontext.gregs[REG_RBX] = spoof_leaf1_ebx;
+                ucontext->uc_mcontext.gregs[REG_RCX] =
+                spoof_leaf1_ecx | (TargetSysHandler ? 0 : (0x1 << 31));
+                ucontext->uc_mcontext.gregs[REG_RDX] = spoof_leaf1_edx;
+                break;
+
+            case 0x40000000:
+                ucontext->uc_mcontext.gregs[REG_RAX] = spoof_leaf40000000_eax;
+                ucontext->uc_mcontext.gregs[REG_RBX] = spoof_leaf40000000_ebx;
+                ucontext->uc_mcontext.gregs[REG_RCX] = spoof_leaf40000000_ecx;
+                ucontext->uc_mcontext.gregs[REG_RDX] = spoof_leaf40000000_edx;
+                break;
+
+            case 0x40000001:
+                ucontext->uc_mcontext.gregs[REG_RAX] = spoof_leaf40000001_eax;
+                ucontext->uc_mcontext.gregs[REG_RBX] = spoof_leaf40000001_ebx;
+                ucontext->uc_mcontext.gregs[REG_RCX] = spoof_leaf40000001_ecx;
+                ucontext->uc_mcontext.gregs[REG_RDX] = spoof_leaf40000001_edx;
+                break;
+
+            case 0x80000002:
+                ucontext->uc_mcontext.gregs[REG_RAX] = 0x756E6544;
+                ucontext->uc_mcontext.gregs[REG_RBX] = 0x4F774F76;
+                ucontext->uc_mcontext.gregs[REG_RCX] = 0x55504320;
+                ucontext->uc_mcontext.gregs[REG_RDX] = 0x31204020;
+                break;
+
+            case 0x80000003:
+                ucontext->uc_mcontext.gregs[REG_RAX] = 0x20373333;
+                ucontext->uc_mcontext.gregs[REG_RBX] = 0x007A4847;
+                ucontext->uc_mcontext.gregs[REG_RCX] = 0x00000000;
+                ucontext->uc_mcontext.gregs[REG_RDX] = 0x00000000;
+                break;
+
+            case 0x80000004:
+                ucontext->uc_mcontext.gregs[REG_RAX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RBX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RCX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RDX] = 0x0;
+                break;
+
+            case 0x336933:
+                MESSAGE("Spoofing CPUID leaf %x\n", leaf);
+                TargetSysHandler = ucontext->uc_mcontext.gregs[REG_RCX];
+                patch_kuser_shared_data();
+                ucontext->uc_mcontext.gregs[REG_RAX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RBX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RCX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RDX] = 0x0;
+                break;
+
+            case 0x336967:
+                MESSAGE("Setting Faketime to %llx... \n",
+                        ucontext->uc_mcontext.gregs[REG_RCX]);
+                SERVER_START_REQ( set_faketime )
+                {
+                    req->faketime = ucontext->uc_mcontext.gregs[REG_RCX];
+                    wine_server_call( req );
+                }
+                SERVER_END_REQ;
+                ucontext->uc_mcontext.gregs[REG_RAX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RBX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RCX] = 0x0;
+                ucontext->uc_mcontext.gregs[REG_RDX] = 0x0;
+                break;
+
+            default:
+                syscall(SYS_arch_prctl, ARCH_SET_CPUID, 1);
+
+                __asm__ volatile(
+                    "cpuid"
+                    : "=a"(ucontext->uc_mcontext.gregs[REG_RAX]),
+                                 "=b"(ucontext->uc_mcontext.gregs[REG_RBX]),
+                                 "=c"(ucontext->uc_mcontext.gregs[REG_RCX]),
+                                 "=d"(ucontext->uc_mcontext.gregs[REG_RDX])
+                                 : "a"(leaf), "c"(subleaf)
+                                 : "memory"
+                );
+
+                syscall(SYS_arch_prctl, ARCH_SET_CPUID, 0);
+                break;
+        }
+
+        ucontext->uc_mcontext.gregs[REG_RIP] += 2;
+        return 1;
+    }
+
+    return 0;
+}
+
 #endif /* LINUWUX_HOOKS_INCLUDED */
