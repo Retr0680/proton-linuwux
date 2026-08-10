@@ -23,7 +23,7 @@ HOOKS_SOURCE="$ROOT_DIR/scripts/linuwux/linuwux_hooks.h"
 HOOKS_DEST="$SOURCE_DIR/wine/dlls/ntdll/unix/linuwux_hooks.h"
 SIGNAL_FILE="$SOURCE_DIR/wine/dlls/ntdll/unix/signal_x86_64.c"
 PROTOCOL_FILE="$SOURCE_DIR/wine/server/protocol.def"
-MAKE_REQUESTS="$SOURCE_DIR/wine/tools/make_requests"
+FD_FILE="$SOURCE_DIR/wine/server/fd.c"
 
 if [[ ! -f "$HOOKS_SOURCE" ]]
 then
@@ -53,10 +53,43 @@ then
     exit 1
 fi
 
-if [[ ! -f "$MAKE_REQUESTS" ]]
+if [[ ! -f "$FD_FILE" ]]
 then
-    echo "Error: Wine make_requests tool not found:" >&2
-    echo "$MAKE_REQUESTS" >&2
+    echo "Error: Wine server fd.c not found:" >&2
+    echo "$FD_FILE" >&2
+    exit 1
+fi
+
+FD_TIME_ANCHOR_COUNT="$(
+    grep -c '^timeout_t monotonic_time;$' "$FD_FILE" || true
+)"
+
+if [[ "$FD_TIME_ANCHOR_COUNT" -ne 1 ]]
+then
+    echo "Error: expected exactly one faketime state anchor in fd.c" >&2
+    echo "Found: $FD_TIME_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
+FD_CURRENT_TIME_ANCHOR_COUNT="$(
+    grep -c 'current_time = (timeout_t)now\.tv_sec \* TICKS_PER_SEC + now\.tv_usec \* 10 + ticks_1601_to_1970;' "$FD_FILE" || true
+)"
+
+if [[ "$FD_CURRENT_TIME_ANCHOR_COUNT" -ne 1 ]]
+then
+    echo "Error: expected exactly one current_time anchor in fd.c" >&2
+    echo "Found: $FD_CURRENT_TIME_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
+FD_LAST_LINE="$(
+    awk 'NF { line = $0 } END { print line }' "$FD_FILE"
+)"
+
+if [[ "$FD_LAST_LINE" != "}" ]]
+then
+    echo "Error: unexpected end of fd.c" >&2
+    echo "Last non-empty line: $FD_LAST_LINE" >&2
     exit 1
 fi
 
@@ -95,7 +128,12 @@ then
 fi
 
 SIGSYS_ANCHOR_COUNT="$(
-    grep -c 'TRACE_(seh)("SIGSYS, rax' "$SIGNAL_FILE" || true
+    awk '
+        /^#ifdef HAVE_SECCOMP$/ { in_seccomp = 1; next }
+        in_seccomp && /^#endif$/ { in_seccomp = 0 }
+        in_seccomp && /TRACE_\(seh\)\("SIGSYS, rax/ { count++ }
+        END { print count + 0 }
+    ' "$SIGNAL_FILE"
 )"
 
 if [[ "$SIGSYS_ANCHOR_COUNT" -ne 1 ]]
@@ -106,7 +144,22 @@ then
 fi
 
 CPUID_ANCHOR_COUNT="$(
-    grep -c 'rec.ExceptionAddress = (void \*)RIP_sig(ucontext);' "$SIGNAL_FILE" || true
+    awk '
+        /^static void segv_handler\( int signal, siginfo_t \*siginfo, void \*sigcontext \)$/ {
+            in_segv = 1
+            next
+        }
+
+        in_segv && /^}$/ {
+            in_segv = 0
+        }
+
+        in_segv && /rec\.ExceptionAddress = \(void \*\)RIP_sig\(ucontext\);/ {
+            count++
+        }
+
+        END { print count + 0 }
+    ' "$SIGNAL_FILE"
 )"
 
 if [[ "$CPUID_ANCHOR_COUNT" -ne 1 ]]
@@ -129,22 +182,26 @@ fi
 
 SIGNAL_TMP="$(mktemp)"
 PROTOCOL_TMP="$(mktemp)"
+FD_TMP="$(mktemp)"
 SIGNAL_BACKUP="$(mktemp)"
 PROTOCOL_BACKUP="$(mktemp)"
+FD_BACKUP="$(mktemp)"
 
 cp -p "$SIGNAL_FILE" "$SIGNAL_BACKUP"
 cp -p "$PROTOCOL_FILE" "$PROTOCOL_BACKUP"
+cp -p "$FD_FILE" "$FD_BACKUP"
 
 cleanup()
 {
-    rm -f "$SIGNAL_TMP" "$PROTOCOL_TMP" \
-          "$SIGNAL_BACKUP" "$PROTOCOL_BACKUP"
+    rm -f "$SIGNAL_TMP" "$PROTOCOL_TMP" "$FD_TMP" \
+          "$SIGNAL_BACKUP" "$PROTOCOL_BACKUP" "$FD_BACKUP"
 }
 
 rollback()
 {
     cp -p "$SIGNAL_BACKUP" "$SIGNAL_FILE"
     cp -p "$PROTOCOL_BACKUP" "$PROTOCOL_FILE"
+    cp -p "$FD_BACKUP" "$FD_FILE"
     rm -f "$HOOKS_DEST"
 }
 
@@ -169,17 +226,41 @@ awk '
     next
 }
 
-    /TRACE_\(seh\)\("SIGSYS, rax/ {
-        print "    if (linuwux_handle_sigsys(sigcontext))"
-        print "        return;"
-        print ""
-    }
+/^#ifdef HAVE_SECCOMP$/ {
+    in_seccomp = 1
+    print
+    next
+}
 
-    /rec\.ExceptionAddress = \(void \*\)RIP_sig\(ucontext\);/ {
-        print "    if (linuwux_handle_cpuid(siginfo, ucontext))"
-        print "        return;"
-        print ""
-    }
+in_seccomp && /^#endif$/ {
+    in_seccomp = 0
+    print
+    next
+}
+
+in_seccomp && /TRACE_\(seh\)\("SIGSYS, rax/ {
+    print "    if (linuwux_handle_sigsys(sigcontext))"
+    print "        return;"
+    print ""
+}
+
+/^static void segv_handler\( int signal, siginfo_t \*siginfo, void \*sigcontext \)$/ {
+    in_segv = 1
+    print
+    next
+}
+
+in_segv && /^}$/ {
+    in_segv = 0
+    print
+    next
+}
+
+in_segv && /rec\.ExceptionAddress = \(void \*\)RIP_sig\(ucontext\);/ {
+    print "    if (linuwux_handle_cpuid(siginfo, ucontext))"
+    print "        return;"
+    print ""
+}
 
     /if \(sigaction\( SIGSEGV, &sig_act, NULL \) == -1\) goto error;/ {
         print
@@ -190,6 +271,54 @@ awk '
 
     { print }
 ' "$SIGNAL_FILE" > "$SIGNAL_TMP"
+
+awk '
+    /^timeout_t monotonic_time;$/ {
+        print
+        print "static timeout_t faketime = 0;"
+        next
+    }
+
+    /current_time = \(timeout_t\)now\.tv_sec \* TICKS_PER_SEC \+ now\.tv_usec \* 10 \+ ticks_1601_to_1970;/ {
+        sub(/;$/, " - faketime;")
+        print
+        next
+    }
+
+    { print }
+' "$FD_FILE" > "$FD_TMP"
+
+cat >> "$FD_TMP" <<'EOF'
+
+DECL_HANDLER(set_faketime)
+{
+    faketime = ((current_time >> 32) - req->faketime) << 32;
+}
+EOF
+
+if ! grep -Fq 'static timeout_t faketime = 0;' "$FD_TMP"
+then
+    echo "Error: failed to prepare faketime state in fd.c" >&2
+    exit 1
+fi
+
+if ! grep -Fq 'current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970 - faketime;' "$FD_TMP"
+then
+    echo "Error: failed to prepare faketime-adjusted current_time in fd.c" >&2
+    exit 1
+fi
+
+if ! grep -Fq 'DECL_HANDLER(set_faketime)' "$FD_TMP"
+then
+    echo "Error: failed to prepare set_faketime handler in fd.c" >&2
+    exit 1
+fi
+
+if ! grep -Fq 'faketime = ((current_time >> 32) - req->faketime) << 32;' "$FD_TMP"
+then
+    echo "Error: failed to prepare set_faketime calculation in fd.c" >&2
+    exit 1
+fi
 
 if ! grep -Fq '@REQ(set_faketime)' "$PROTOCOL_TMP"
 then
@@ -204,5 +333,6 @@ then
 fi
 
 cp "$PROTOCOL_TMP" "$PROTOCOL_FILE"
+cp "$FD_TMP" "$FD_FILE"
 cp "$SIGNAL_TMP" "$SIGNAL_FILE"
 cp "$HOOKS_SOURCE" "$HOOKS_DEST"
