@@ -22,6 +22,7 @@ fi
 HOOKS_SOURCE="$ROOT_DIR/scripts/linuwux/linuwux_hooks.h"
 HOOKS_DEST="$SOURCE_DIR/wine/dlls/ntdll/unix/linuwux_hooks.h"
 SIGNAL_FILE="$SOURCE_DIR/wine/dlls/ntdll/unix/signal_x86_64.c"
+PROTOCOL_FILE="$SOURCE_DIR/wine/server/protocol.def"
 
 if [[ ! -f "$HOOKS_SOURCE" ]]
 then
@@ -34,6 +35,30 @@ if [[ ! -f "$SIGNAL_FILE" ]]
 then
     echo "Error: signal_x86_64.c not found:" >&2
     echo "$SIGNAL_FILE" >&2
+    exit 1
+fi
+
+if [[ ! -f "$PROTOCOL_FILE" ]]
+then
+    echo "Error: Wine server protocol definition not found:" >&2
+    echo "$PROTOCOL_FILE" >&2
+    exit 1
+fi
+
+if grep -Fq '@REQ(set_faketime)' "$PROTOCOL_FILE"
+then
+    echo "Error: set_faketime is already defined in protocol.def" >&2
+    exit 1
+fi
+
+PROTOCOL_LAST_LINE="$(
+    awk 'NF { line = $0 } END { print line }' "$PROTOCOL_FILE"
+)"
+
+if [[ "$PROTOCOL_LAST_LINE" != "@END" ]]
+then
+    echo "Error: unexpected end of protocol.def" >&2
+    echo "Last non-empty line: $PROTOCOL_LAST_LINE" >&2
     exit 1
 fi
 
@@ -88,6 +113,17 @@ then
 fi
 
 SIGNAL_TMP="$(mktemp)"
+PROTOCOL_TMP="$(mktemp)"
+
+cp "$PROTOCOL_FILE" "$PROTOCOL_TMP"
+
+cat >> "$PROTOCOL_TMP" <<'EOF'
+
+@REQ(set_faketime)
+    unsigned __int64 faketime;
+@REPLY
+@END
+EOF
 
 awk '
     /^#define NONAMELESSUNION$/ {
