@@ -309,4 +309,28 @@ static int linuwux_handle_cpuid(siginfo_t *siginfo, ucontext_t *ucontext)
     return 0;
 }
 
+static int linuwux_handle_sigsys(void *sigcontext)
+{
+    ucontext_t *ctx = sigcontext;
+    __uint128_t *xmm_regs = (__uint128_t *)ctx->uc_mcontext.fpregs->_xmm;
+
+    if (TargetSysHandler != 0 &&
+        (xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) != 0x1337133713371337)
+    {
+        xmm_regs[4] = ctx->uc_mcontext.gregs[REG_RAX] & 0xFFFFFFFF;
+        ctx->uc_mcontext.gregs[REG_RAX] = ctx->uc_mcontext.gregs[REG_RCX];
+        ctx->uc_mcontext.gregs[REG_RCX] = TargetSysHandler;
+        ctx->uc_mcontext.gregs[REG_RIP] = TargetSysHandler;
+        return 1;
+    }
+
+    if ((xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) == 0x1337133713371337)
+    {
+        xmm_regs[5] = 0;
+        /* MESSAGE("SyscallBypassMagic!\n"); */
+    }
+
+    return 0;
+}
+
 #endif /* LINUWUX_HOOKS_INCLUDED */
