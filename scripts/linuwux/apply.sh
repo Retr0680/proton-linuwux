@@ -31,6 +31,13 @@ then
     exit 1
 fi
 
+if [[ -e "$HOOKS_DEST" ]]
+then
+    echo "Error: LinUwUx hooks destination already exists:" >&2
+    echo "$HOOKS_DEST" >&2
+    exit 1
+fi
+
 if [[ ! -f "$SIGNAL_FILE" ]]
 then
     echo "Error: signal_x86_64.c not found:" >&2
@@ -114,6 +121,27 @@ fi
 
 SIGNAL_TMP="$(mktemp)"
 PROTOCOL_TMP="$(mktemp)"
+SIGNAL_BACKUP="$(mktemp)"
+PROTOCOL_BACKUP="$(mktemp)"
+
+cp -p "$SIGNAL_FILE" "$SIGNAL_BACKUP"
+cp -p "$PROTOCOL_FILE" "$PROTOCOL_BACKUP"
+
+cleanup()
+{
+    rm -f "$SIGNAL_TMP" "$PROTOCOL_TMP" \
+          "$SIGNAL_BACKUP" "$PROTOCOL_BACKUP"
+}
+
+rollback()
+{
+    cp -p "$SIGNAL_BACKUP" "$SIGNAL_FILE"
+    cp -p "$PROTOCOL_BACKUP" "$PROTOCOL_FILE"
+    rm -f "$HOOKS_DEST"
+}
+
+trap rollback ERR
+trap cleanup EXIT
 
 cp "$PROTOCOL_FILE" "$PROTOCOL_TMP"
 
@@ -153,6 +181,18 @@ awk '
     { print }
 ' "$SIGNAL_FILE" > "$SIGNAL_TMP"
 
-mv "$SIGNAL_TMP" "$SIGNAL_FILE"
+if ! grep -Fq '@REQ(set_faketime)' "$PROTOCOL_TMP"
+then
+    echo "Error: failed to prepare set_faketime in protocol.def" >&2
+    exit 1
+fi
 
+if ! grep -Fq '#include "linuwux_hooks.h"' "$SIGNAL_TMP"
+then
+    echo "Error: failed to prepare LinUwUx hooks in signal_x86_64.c" >&2
+    exit 1
+fi
+
+cp "$PROTOCOL_TMP" "$PROTOCOL_FILE"
+cp "$SIGNAL_TMP" "$SIGNAL_FILE"
 cp "$HOOKS_SOURCE" "$HOOKS_DEST"
