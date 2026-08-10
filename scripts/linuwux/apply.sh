@@ -54,6 +54,17 @@ then
     exit 1
 fi
 
+SIGSYS_ANCHOR_COUNT="$(
+    grep -c 'TRACE_(seh)("SIGSYS, rax' "$SIGNAL_FILE" || true
+)"
+
+if [[ "$SIGSYS_ANCHOR_COUNT" -ne 1 ]]
+then
+    echo "Error: expected exactly one SIGSYS anchor in signal_x86_64.c" >&2
+    echo "Found: $SIGSYS_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
 SIGNAL_TMP="$(mktemp)"
 
 awk '
@@ -61,6 +72,13 @@ awk '
         print "#include \"linuwux_hooks.h\""
         print ""
     }
+
+    /TRACE_\(seh\)\("SIGSYS, rax/ {
+        print "    if (linuwux_handle_sigsys(sigcontext))"
+        print "        return;"
+        print ""
+    }
+
     { print }
 ' "$SIGNAL_FILE" > "$SIGNAL_TMP"
 
