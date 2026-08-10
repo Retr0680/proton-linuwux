@@ -84,12 +84,12 @@ then
 fi
 
 INCLUDE_ANCHOR_COUNT="$(
-    grep -c '^#define NONAMELESSUNION$' "$SIGNAL_FILE" || true
+    grep -c '^#include "wine/debug.h"$' "$SIGNAL_FILE" || true
 )"
 
 if [[ "$INCLUDE_ANCHOR_COUNT" -ne 1 ]]
 then
-    echo "Error: expected exactly one NONAMELESSUNION anchor in signal_x86_64.c" >&2
+    echo "Error: expected exactly one wine/debug.h include anchor in signal_x86_64.c" >&2
     echo "Found: $INCLUDE_ANCHOR_COUNT" >&2
     exit 1
 fi
@@ -162,10 +162,12 @@ cat >> "$PROTOCOL_TMP" <<'EOF'
 EOF
 
 awk '
-    /^#define NONAMELESSUNION$/ {
-        print "#include \"linuwux_hooks.h\""
-        print ""
-    }
+    /^#include "wine\/debug\.h"$/ {
+    print
+    print "#include \"linuwux_hooks.h\""
+    print ""
+    next
+}
 
     /TRACE_\(seh\)\("SIGSYS, rax/ {
         print "    if (linuwux_handle_sigsys(sigcontext))"
