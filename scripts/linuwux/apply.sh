@@ -65,6 +65,28 @@ then
     exit 1
 fi
 
+CPUID_ANCHOR_COUNT="$(
+    grep -c 'rec.ExceptionAddress = (void \*)RIP_sig(ucontext);' "$SIGNAL_FILE" || true
+)"
+
+if [[ "$CPUID_ANCHOR_COUNT" -ne 1 ]]
+then
+    echo "Error: expected exactly one CPUID/segv anchor in signal_x86_64.c" >&2
+    echo "Found: $CPUID_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
+CPUID_INIT_ANCHOR_COUNT="$(
+    grep -c 'if (sigaction( SIGSEGV, &sig_act, NULL ) == -1) goto error;' "$SIGNAL_FILE" || true
+)"
+
+if [[ "$CPUID_INIT_ANCHOR_COUNT" -ne 1 ]]
+then
+    echo "Error: expected exactly one CPUID init anchor in signal_x86_64.c" >&2
+    echo "Found: $CPUID_INIT_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
 SIGNAL_TMP="$(mktemp)"
 
 awk '
@@ -77,6 +99,19 @@ awk '
         print "    if (linuwux_handle_sigsys(sigcontext))"
         print "        return;"
         print ""
+    }
+
+    /rec\.ExceptionAddress = \(void \*\)RIP_sig\(ucontext\);/ {
+        print "    if (linuwux_handle_cpuid(siginfo, ucontext))"
+        print "        return;"
+        print ""
+    }
+
+    /if \(sigaction\( SIGSEGV, &sig_act, NULL \) == -1\) goto error;/ {
+        print
+        print "    detect_cpu_vendor();"
+        print "    syscall(SYS_arch_prctl, ARCH_SET_CPUID, 0);"
+        next
     }
 
     { print }
