@@ -23,6 +23,7 @@ HOOKS_SOURCE="$ROOT_DIR/scripts/linuwux/linuwux_hooks.h"
 HOOKS_DEST="$SOURCE_DIR/wine/dlls/ntdll/unix/linuwux_hooks.h"
 SIGNAL_FILE="$SOURCE_DIR/wine/dlls/ntdll/unix/signal_x86_64.c"
 PROTOCOL_FILE="$SOURCE_DIR/wine/server/protocol.def"
+MAKE_REQUESTS="$SOURCE_DIR/wine/tools/make_requests"
 
 if [[ ! -f "$HOOKS_SOURCE" ]]
 then
@@ -49,6 +50,13 @@ if [[ ! -f "$PROTOCOL_FILE" ]]
 then
     echo "Error: Wine server protocol definition not found:" >&2
     echo "$PROTOCOL_FILE" >&2
+    exit 1
+fi
+
+if [[ ! -f "$MAKE_REQUESTS" ]]
+then
+    echo "Error: Wine make_requests tool not found:" >&2
+    echo "$MAKE_REQUESTS" >&2
     exit 1
 fi
 
