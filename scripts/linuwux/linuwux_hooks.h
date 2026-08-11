@@ -10,6 +10,9 @@
 
 #ifndef LINUWUX_HOOKS_INCLUDED
 #define LINUWUX_HOOKS_INCLUDED
+#ifndef ARCH_SET_CPUID
+#define ARCH_SET_CPUID 0x1012
+#endif
 
 /* This will point to the game's memory region where syscall spoofing is happening. */
 uint64_t TargetSysHandler = 0;
@@ -221,7 +224,7 @@ static int linuwux_handle_cpuid(siginfo_t *siginfo, ucontext_t *ucontext)
                 ucontext->uc_mcontext.gregs[REG_RAX] = spoof_leaf1_eax;
                 ucontext->uc_mcontext.gregs[REG_RBX] = spoof_leaf1_ebx;
                 ucontext->uc_mcontext.gregs[REG_RCX] =
-                spoof_leaf1_ecx | (TargetSysHandler ? 0 : (0x1 << 31));
+                spoof_leaf1_ecx | (TargetSysHandler ? 0 : (1u << 31));
                 ucontext->uc_mcontext.gregs[REG_RDX] = spoof_leaf1_edx;
                 break;
 
