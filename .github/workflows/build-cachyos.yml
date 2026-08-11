@@ -134,8 +134,8 @@ jobs:
         with:
           name: Proton-CachyOS-LinUwUx
           path: |
-            output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz
-            output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz.sha256
+            output/proton-cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz
+            output/proton-cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz.sha256
           if-no-files-found: error
 
       - name: Publish Proton-CachyOS release
