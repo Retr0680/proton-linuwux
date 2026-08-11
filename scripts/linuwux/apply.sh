@@ -342,10 +342,20 @@ in_modern_sigsys && /^#endif$/ {
     next
 }
 
-(in_legacy_sigsys || in_modern_sigsys) &&
+in_legacy_sigsys &&
 /TRACE_\(seh\)\("SIGSYS, rax/ {
     print "    if (linuwux_handle_sigsys(sigcontext))"
     print "        return;"
+    print ""
+}
+
+in_modern_sigsys &&
+/TRACE_\(seh\)\("SIGSYS, rax/ {
+    print "    if (linuwux_handle_sigsys(sigcontext))"
+    print "    {"
+    print "        leave_handler(ucontext);"
+    print "        return;"
+    print "    }"
     print ""
 }
 
