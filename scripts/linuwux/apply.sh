@@ -193,9 +193,29 @@ fi
 
 SIGSYS_ANCHOR_COUNT="$(
     awk '
-        /^#ifdef HAVE_SECCOMP$/ { in_seccomp = 1; next }
-        in_seccomp && /^#endif$/ { in_seccomp = 0 }
-        in_seccomp && /TRACE_\(seh\)\("SIGSYS, rax/ { count++ }
+        /^#ifdef HAVE_SECCOMP$/ {
+            in_legacy_sigsys = 1
+            next
+        }
+
+        in_legacy_sigsys && /^#endif$/ {
+            in_legacy_sigsys = 0
+        }
+
+        /^#if defined\(__APPLE__\) \|\| defined\(__linux__\)$/ {
+            in_modern_sigsys = 1
+            next
+        }
+
+        in_modern_sigsys && /^#endif$/ {
+            in_modern_sigsys = 0
+        }
+
+        (in_legacy_sigsys || in_modern_sigsys) &&
+        /TRACE_\(seh\)\("SIGSYS, rax/ {
+            count++
+        }
+
         END { print count + 0 }
     ' "$SIGNAL_FILE"
 )"
@@ -299,18 +319,31 @@ awk '
 }
 
 /^#ifdef HAVE_SECCOMP$/ {
-    in_seccomp = 1
+    in_legacy_sigsys = 1
     print
     next
 }
 
-in_seccomp && /^#endif$/ {
-    in_seccomp = 0
+in_legacy_sigsys && /^#endif$/ {
+    in_legacy_sigsys = 0
     print
     next
 }
 
-in_seccomp && /TRACE_\(seh\)\("SIGSYS, rax/ {
+/^#if defined\(__APPLE__\) \|\| defined\(__linux__\)$/ {
+    in_modern_sigsys = 1
+    print
+    next
+}
+
+in_modern_sigsys && /^#endif$/ {
+    in_modern_sigsys = 0
+    print
+    next
+}
+
+(in_legacy_sigsys || in_modern_sigsys) &&
+/TRACE_\(seh\)\("SIGSYS, rax/ {
     print "    if (linuwux_handle_sigsys(sigcontext))"
     print "        return;"
     print ""
