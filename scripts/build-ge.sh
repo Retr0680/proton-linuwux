@@ -70,28 +70,20 @@ echo "== Preparazione Proton =="
 
 ./patches/protonprep-valve-staging.sh
 
-echo "== Applicazione LinUwUx.patch =="
+echo "== Applicazione LinUwUx rework =="
 
-PATCH_FILE="$ROOT_DIR/LinUwUx.patch"
+LINUWUX_APPLY="$ROOT_DIR/scripts/linuwux/apply.sh"
 
-if [[ ! -f "$PATCH_FILE" ]]
+if [[ ! -f "$LINUWUX_APPLY" ]]
 then
-    echo "Errore: LinUwUx.patch non trovato:"
-    echo "$PATCH_FILE"
+    echo "Errore: script LinUwUx non trovato:"
+    echo "$LINUWUX_APPLY"
     exit 1
 fi
 
-echo "Verifica preliminare della patch..."
+bash "$LINUWUX_APPLY" "$PWD"
 
-if ! patch --dry-run -p1 < "$PATCH_FILE"
-then
-    echo "Errore: LinUwUx.patch non è compatibile con questa versione di Proton-GE."
-    exit 1
-fi
-
-patch -p1 < "$PATCH_FILE"
-
-echo "LinUwUx.patch applicata correttamente."
+echo "LinUwUx rework applicato correttamente."
 
 echo "== Configurazione build =="
 
