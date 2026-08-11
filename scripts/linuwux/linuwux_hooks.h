@@ -10,6 +10,8 @@
 
 #ifndef LINUWUX_HOOKS_INCLUDED
 #define LINUWUX_HOOKS_INCLUDED
+
+#include <errno.h>
 #ifndef ARCH_SET_CPUID
 #define ARCH_SET_CPUID 0x1012
 #endif
