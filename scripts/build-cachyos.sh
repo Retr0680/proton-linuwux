@@ -7,6 +7,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKDIR="$ROOT_DIR/work"
 OUTPUT="$ROOT_DIR/output"
 
+LINUWUX_BUILD_SUFFIX="${LINUWUX_BUILD_SUFFIX:-}"
+
 mkdir -p "$WORKDIR"
 mkdir -p "$OUTPUT"
 
@@ -35,7 +37,7 @@ fi
 CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
 CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
 
-BUILD_NAME="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx"
+BUILD_NAME="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
 echo "Tag sorgente: $CACHYOS_TAG"
 echo "Nome build: $BUILD_NAME"

@@ -10,6 +10,9 @@ concurrency:
   group: build-ge
   cancel-in-progress: false
 
+env:
+  LINUWUX_BUILD_SUFFIX: "-Rework"
+
 jobs:
   build-ge:
     runs-on: ubuntu-24.04
@@ -43,7 +46,7 @@ jobs:
             exit 1
           fi
 
-          RELEASE_TAG="${GE_TAG}-LinUwUx"
+          RELEASE_TAG="${GE_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
           echo "Release upstream: $GE_TAG"
           echo "Release LinUwUx prevista: $RELEASE_TAG"
@@ -107,7 +110,7 @@ jobs:
         run: |
           shopt -s nullglob
 
-          archives=(output/GE-Proton*-LinUwUx.tar.gz)
+          archives=(output/GE-Proton*-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
@@ -142,7 +145,7 @@ jobs:
         run: |
           shopt -s nullglob
 
-          archives=(output/GE-Proton*-LinUwUx.tar.gz)
+          archives=(output/GE-Proton*-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
@@ -163,7 +166,7 @@ jobs:
 
           filename="$(basename "$archive")"
           release_tag="${filename%.tar.gz}"
-          base_release="${release_tag%-LinUwUx}"
+          base_release="${release_tag%-LinUwUx${LINUWUX_BUILD_SUFFIX}}"
 
           echo "Archivio: $archive"
           echo "Tag Release: $release_tag"
@@ -176,9 +179,9 @@ jobs:
               '' \
               "- $base_release" \
               '' \
-              '## Patch' \
+              '## LinUwUx integration' \
               '' \
-              '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
+              '- LinUwUx integration ported directly into the Proton and Wine source trees.' \
               '' \
               '## Credits' \
               '' \

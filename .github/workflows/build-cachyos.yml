@@ -10,6 +10,9 @@ concurrency:
   group: build-cachyos
   cancel-in-progress: false
 
+env:
+  LINUWUX_BUILD_SUFFIX: "-Rework"
+
 jobs:
   build-cachyos:
     runs-on: ubuntu-24.04
@@ -41,7 +44,7 @@ jobs:
           CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
           CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
 
-          RELEASE_TAG="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx"
+          RELEASE_TAG="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
           echo "Release upstream: $CACHYOS_TAG"
           echo "Release LinUwUx prevista: $RELEASE_TAG"
@@ -105,7 +108,7 @@ jobs:
         run: |
           shopt -s nullglob
 
-          archives=(output/proton-cachyos-*-slr-LinUwUx.tar.gz)
+          archives=(output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
@@ -131,8 +134,8 @@ jobs:
         with:
           name: Proton-CachyOS-LinUwUx
           path: |
-            output/proton-cachyos-*-slr-LinUwUx.tar.gz
-            output/proton-cachyos-*-slr-LinUwUx.tar.gz.sha256
+            output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz
+            output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz.sha256
           if-no-files-found: error
 
       - name: Publish Proton-CachyOS release
@@ -142,7 +145,7 @@ jobs:
         run: |
           shopt -s nullglob
 
-          archives=(output/proton-cachyos-*-slr-LinUwUx.tar.gz)
+          archives=(output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
@@ -163,7 +166,7 @@ jobs:
 
           filename="$(basename "$archive")"
           release_tag="${filename%.tar.gz}"
-          base_release="${release_tag%-LinUwUx}"
+          base_release="${release_tag%-LinUwUx${LINUWUX_BUILD_SUFFIX}}"
 
           echo "Archivio: $archive"
           echo "Checksum: $checksum"
@@ -177,9 +180,9 @@ jobs:
               '' \
               "- $base_release" \
               '' \
-              '## Patch' \
+              '## LinUwUx integration' \
               '' \
-              '- LinUwUx.patch (required for the Hypervisor-less Denuvo bypass on Linux).' \
+              '- LinUwUx integration ported directly into the Proton and Wine source trees.' \
               '' \
               '## Credits' \
               '' \

@@ -7,6 +7,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKDIR="$ROOT_DIR/work"
 OUTPUT="$ROOT_DIR/output"
 
+LINUWUX_BUILD_SUFFIX="${LINUWUX_BUILD_SUFFIX:-}"
+
 mkdir -p "$WORKDIR"
 mkdir -p "$OUTPUT"
 
@@ -93,7 +95,7 @@ cd build
 
 
 ../configure.sh \
-    --build-name="${GE_TAG}-LinUwUx"
+    --build-name="${GE_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
 
 echo "== Download preventivo xrandr =="
