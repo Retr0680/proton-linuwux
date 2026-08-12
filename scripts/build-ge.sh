@@ -68,9 +68,37 @@ do
     sleep "$wait_seconds"
 done
 
+echo "== Verifica submodule critici =="
+
+git submodule status openfst
+git -C openfst rev-parse HEAD
+
+if [[ ! -f openfst/configure.ac ]]
+then
+    echo "Errore: openfst/configure.ac mancante dopo l'inizializzazione dei submodule." >&2
+    ls -la openfst >&2 || true
+    git -C openfst ls-files | head -100 >&2 || true
+    exit 1
+fi
+
+sha256sum openfst/configure.ac
+
 echo "== Preparazione Proton =="
 
 ./patches/protonprep-valve-staging.sh
+
+echo "== Verifica openfst dopo protonprep =="
+
+if [[ ! -f openfst/configure.ac ]]
+then
+    echo "Errore: openfst/configure.ac è scomparso durante protonprep." >&2
+    git submodule status openfst >&2 || true
+    git -C openfst status --short >&2 || true
+    ls -la openfst >&2 || true
+    exit 1
+fi
+
+sha256sum openfst/configure.ac
 
 echo "== Applicazione LinUwUx rework =="
 
