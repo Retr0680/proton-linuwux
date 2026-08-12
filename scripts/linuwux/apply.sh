@@ -20,6 +20,7 @@ then
 fi
 
 HOOKS_SOURCE="$ROOT_DIR/scripts/linuwux/linuwux_hooks.h"
+BPF_HELPER="$ROOT_DIR/scripts/linuwux/apply_bpf_backend.py"
 HOOKS_DEST="$SOURCE_DIR/wine/dlls/ntdll/unix/linuwux_hooks.h"
 SIGNAL_FILE="$SOURCE_DIR/wine/dlls/ntdll/unix/signal_x86_64.c"
 PROTOCOL_FILE="$SOURCE_DIR/wine/server/protocol.def"
@@ -31,6 +32,13 @@ if [[ ! -f "$HOOKS_SOURCE" ]]
 then
     echo "Error: LinUwUx hooks source not found:" >&2
     echo "$HOOKS_SOURCE" >&2
+    exit 1
+fi
+
+if [[ ! -f "$BPF_HELPER" ]]
+then
+    echo "Error: LinUwUx BPF helper not found:" >&2
+    echo "$BPF_HELPER" >&2
     exit 1
 fi
 
@@ -264,6 +272,27 @@ then
     exit 1
 fi
 
+SUD_ENABLE_ANCHOR_COUNT="$(
+    grep -c '^static LONG syscall_dispatch_enabled = TRUE;$' "$SIGNAL_FILE" || true
+)"
+
+LEGACY_BPF_ANCHOR_COUNT="$(
+    grep -c '^static void install_bpf(struct sigaction \*sig_act)$' "$SIGNAL_FILE" || true
+)"
+
+if [[ "$SUD_ENABLE_ANCHOR_COUNT" -eq 1 && "$LEGACY_BPF_ANCHOR_COUNT" -eq 0 ]]
+then
+    LINUWUX_SYSCALL_BACKEND="sud"
+elif [[ "$SUD_ENABLE_ANCHOR_COUNT" -eq 0 && "$LEGACY_BPF_ANCHOR_COUNT" -eq 1 ]]
+then
+    LINUWUX_SYSCALL_BACKEND="legacy-bpf"
+else
+    echo "Error: unsupported or ambiguous Wine syscall backend" >&2
+    echo "SUD enable anchors: $SUD_ENABLE_ANCHOR_COUNT" >&2
+    echo "Legacy BPF anchors: $LEGACY_BPF_ANCHOR_COUNT" >&2
+    exit 1
+fi
+
 SIGNAL_TMP="$(mktemp)"
 PROTOCOL_TMP="$(mktemp)"
 FD_TMP="$(mktemp)"
@@ -386,6 +415,11 @@ in_segv && /rec\.ExceptionAddress = \(void \*\)RIP_sig\(ucontext\);/ {
 
     { print }
 ' "$SIGNAL_FILE" > "$SIGNAL_TMP"
+
+if [[ "$LINUWUX_SYSCALL_BACKEND" == "sud" ]]
+then
+    python3 "$BPF_HELPER" "$SIGNAL_TMP"
+fi
 
 awk '
     /^timeout_t monotonic_time;$/ {
