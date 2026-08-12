@@ -81,7 +81,12 @@ for attempt in 1 2 3 4 5
 do
     echo "Tentativo submodule $attempt di 5"
 
-    if git submodule update --init --recursive --jobs 1
+    if git submodule update \
+        --init \
+        --recursive \
+        --checkout \
+        --force \
+        --jobs 1
     then
         break
     fi
