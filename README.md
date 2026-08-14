@@ -42,6 +42,10 @@ This project only automates the build and distribution of Proton-GE and Proton-C
 
 The patch originates from the relevant discussion on [cs.rin.ru](https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989).
 
+> [!NOTE]
+> This project depends on maintaining patched Proton builds and may become outdated as Proton and Wine evolve.
+> Users looking for an alternative approach may want to consider [Shaduwulf's LinUwUx Runtime](https://github.com/xshaduwulfx/shaduwulf-linuwux-runtime), a standalone runtime implementation that does not require a patched Proton build.
+
 > [!IMPORTANT]
 > These builds contain no additional performance tweaks or unrelated changes.  
 > The only project-specific modification is the application of the original `LinUwUx.patch` developed by **LinUwUx**.
