@@ -201,6 +201,7 @@ Install the compatibility tool inside your home directory, for example:
 ~/.local/share/Steam/compatibilitytools.d/
 ~/.var/app/com.valvesoftware.Steam/.local/share/Steam/compatibilitytools.d/
 ~/.var/app/com.heroicgameslauncher.hgl/config/heroic/tools/proton/
+~/.var/app/net.lutris.Lutris/data/lutris/runners/wine/
 ```
 
 Do not attempt to install it into a read-only system directory such as `/usr/share/steam`.
