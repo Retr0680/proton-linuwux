@@ -124,6 +124,38 @@ Each release archive contains a complete compatibility-tool directory that can b
 
 9. Launch the game.
 
+### Lutris
+
+1. Download the desired archive from [GitHub Releases](../../releases).
+
+2. Extract the Proton-LinUwUx directory into the Lutris custom Wine runners directory:
+
+   **Native installation:**
+
+   ```text
+   ~/.local/share/lutris/runners/wine/
+   ```
+
+   **Flatpak installation:**
+
+   ```text
+   ~/.var/app/net.lutris.Lutris/data/lutris/runners/wine/
+   ```
+
+3. Create the selected directory if it does not already exist.
+
+4. Restart Lutris.
+
+5. Select the desired game from the **Library**.
+
+6. Open the game's **Configure** menu.
+
+7. Open the **Runner options** tab.
+
+8. Under **Wine version**, select the installed Proton-LinUwUx build.
+
+9. Save the configuration and launch the game.
+
 ### Faugus Launcher
 
 1. Extract the build into one of the Steam compatibility-tools directories listed above.
