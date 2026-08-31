@@ -101,12 +101,6 @@ static void check_bpf_jit_enable(void)
 
 static void install_bpf(struct sigaction *sig_act)
 {
-    if (getenv("LINUWUX_SKIP_BPF_BOOTSTRAP"))
-    {
-        TRACE_(seh)("Skipping LinUwUx legacy BPF for bootstrap.\n");
-        return;
-    }
-
 #ifdef __linux__
 #   ifndef SECCOMP_FILTER_FLAG_SPEC_ALLOW
 #       define SECCOMP_FILTER_FLAG_SPEC_ALLOW (1UL << 2)
@@ -157,6 +151,12 @@ static void install_bpf(struct sigaction *sig_act)
     long (*test_syscall)(long sc_number);
     struct sock_fprog prog;
     NTSTATUS status;
+
+    if (getenv("LINUWUX_SKIP_BPF_BOOTSTRAP"))
+    {
+        TRACE_(seh)("Skipping LinUwUx legacy BPF for bootstrap.\n");
+        return;
+    }
 
     if ((ULONG_PTR)sc_seccomp < NATIVE_SYSCALL_ADDRESS_START
             || (ULONG_PTR)syscall < NATIVE_SYSCALL_ADDRESS_START)
