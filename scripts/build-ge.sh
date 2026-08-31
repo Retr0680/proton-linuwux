@@ -154,6 +154,7 @@ echo "$XRANDR_SHA256  $XRANDR_TARBALL" | sha256sum --check -
 
 echo "== Compilazione =="
 
+LINUWUX_SKIP_BPF_BOOTSTRAP=1 \
 make V=1 VERBOSE=1 redist 2>&1 | tee "$ROOT_DIR/build-ge.log"
 
 echo "== Copia risultato =="
