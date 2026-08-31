@@ -60,6 +60,10 @@ if "static void install_bpf(struct sigaction *sig_act)" in s:
     fail("install_bpf is already present")
 
 bpf_backend = r"""#ifdef __linux__
+#ifndef NATIVE_SYSCALL_ADDRESS_START
+#define NATIVE_SYSCALL_ADDRESS_START 0x700000000000
+#endif
+
 static int sc_seccomp(unsigned int operation, unsigned int flags, void *args)
 {
 #ifndef __NR_seccomp
@@ -267,6 +271,7 @@ s = s[:return_pos] + install_call + s[return_pos:]
 # ------------------------------------------------------------
 
 checks = {
+    "native syscall address": "#define NATIVE_SYSCALL_ADDRESS_START 0x700000000000",
     "fcntl header": "# include <fcntl.h>",
     "seccomp header": "# include <linux/seccomp.h>",
     "BPF header": "# include <linux/filter.h>",
