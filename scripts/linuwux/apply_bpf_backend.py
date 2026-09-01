@@ -45,7 +45,145 @@ s = s.replace(sud_anchor, headers_and_backend, 1)
 
 
 # ------------------------------------------------------------
-# 2. Add Wine's legacy seccomp/BPF syscall trapping backend.
+# 2. Make the LinUwUx SIGSYS handler compatible with legacy BPF.
+#
+# GE/Proton's SUD patch stack has existed in variants both with
+# and without the !syscall_dispatch_enabled retry fallback.
+# LinUwUx disables SUD globally, so that fallback must never
+# survive in the BPF-transformed handler: retrying the trapped
+# syscall would simply trigger SIGSYS again forever.
+#
+# The legacy install_bpf() probe uses syscall 0xffff and expects
+# the SIGSYS handler to return STATUS_INVALID_PARAMETER when a
+# seccomp filter is already active.
+# ------------------------------------------------------------
+
+linuwux_sigsys_anchor = "if (linuwux_handle_sigsys(sigcontext))"
+
+if s.count(linuwux_sigsys_anchor) != 1:
+    fail(
+        "expected exactly one LinUwUx SIGSYS handler anchor, "
+        f"found {s.count(linuwux_sigsys_anchor)}"
+    )
+
+handler_pos = s.find(linuwux_sigsys_anchor)
+handler_start = s.rfind("static void sigsys_handler(", 0, handler_pos)
+
+if handler_start == -1:
+    fail("could not locate LinUwUx sigsys_handler start")
+
+handler_end_anchor = "\n}\n"
+handler_end = s.find(handler_end_anchor, handler_pos)
+
+if handler_end == -1:
+    fail("could not locate LinUwUx sigsys_handler end")
+
+handler_end += len(handler_end_anchor)
+handler = s[handler_start:handler_end]
+
+# Old SUD behaviour is invalid once LinUwUx switches the backend
+# to legacy seccomp/BPF.  Do not remove the surrounding Linux
+# preprocessor guard because it also contains the EOS workaround.
+stale_sud_fallback = """    if (!syscall_dispatch_enabled)
+    {
+        prctl( PR_SET_SYSCALL_USER_DISPATCH, PR_SYS_DISPATCH_OFF, 0, 0, 0 );
+        RIP_sig(ucontext) -= 2;  /* retry the syscall */
+        return;
+    }
+
+"""
+
+stale_count = handler.count(stale_sud_fallback)
+
+if stale_count > 1:
+    fail(
+        "expected at most one stale SUD SIGSYS fallback, "
+        f"found {stale_count}"
+    )
+
+if stale_count == 1:
+    handler = handler.replace(stale_sud_fallback, "", 1)
+
+probe = """    if (RAX_sig(ucontext) == 0xffff)
+    {
+        /* Test syscall from the Unix side (install_bpf). */
+        RAX_sig(ucontext) = STATUS_INVALID_PARAMETER;
+        return;
+    }
+"""
+
+eos_anchor = (
+    "    /* HACK: The EOS version of easy anti cheat executes linux syscalls"
+)
+
+if handler.count(eos_anchor) != 1:
+    fail(
+        "expected exactly one EOS syscall workaround anchor, "
+        f"found {handler.count(eos_anchor)}"
+    )
+
+probe_count = handler.count(probe)
+
+if probe_count == 0:
+    # The probe belongs inside the existing Linux block, directly
+    # before the EOS workaround.  Preserve that guard rather than
+    # manufacturing a second #ifdef/#endif pair.
+    linux_eos_anchor = "#ifdef __linux__\n" + eos_anchor
+
+    if handler.count(linux_eos_anchor) != 1:
+        fail(
+            "expected Linux EOS block immediately after SUD fallback "
+            "removal"
+        )
+
+    handler = handler.replace(
+        linux_eos_anchor,
+        "#ifdef __linux__\n" + probe + "\n" + eos_anchor,
+        1,
+    )
+
+elif probe_count != 1:
+    fail(
+        "expected at most one legacy BPF 0xffff probe, "
+        f"found {probe_count}"
+    )
+
+if "if (!syscall_dispatch_enabled)" in handler:
+    fail("stale SUD retry fallback remained in LinUwUx sigsys_handler")
+
+if handler.count("RAX_sig(ucontext) == 0xffff") != 1:
+    fail("LinUwUx sigsys_handler does not contain exactly one 0xffff probe")
+
+if handler.count("RAX_sig(ucontext) = STATUS_INVALID_PARAMETER;") != 1:
+    fail(
+        "LinUwUx sigsys_handler does not contain exactly one "
+        "STATUS_INVALID_PARAMETER probe result"
+    )
+
+if "linuwux_handle_sigsys(sigcontext)" not in handler:
+    fail("LinUwUx SIGSYS hook disappeared during BPF conversion")
+
+if "__wine_syscall_dispatcher_prolog_end_ptr" not in handler:
+    fail("normal Wine syscall dispatcher redirect disappeared")
+
+# Verify topology: probe and EOS must remain together inside the
+# same existing Linux preprocessor block.
+probe_pos = handler.find(probe)
+eos_pos = handler.find(eos_anchor)
+linux_pos = handler.rfind("#ifdef __linux__", 0, probe_pos)
+linux_end = handler.find("#endif", eos_pos)
+
+if linux_pos == -1 or linux_end == -1:
+    fail("legacy BPF probe/EOS Linux guard is incomplete")
+
+if not (linux_pos < probe_pos < eos_pos < linux_end):
+    fail("legacy BPF probe and EOS workaround are not in the same Linux block")
+
+s = s[:handler_start] + handler + s[handler_end:]
+
+
+# ------------------------------------------------------------
+# 3. Add Wine's legacy seccomp/BPF syscall trapping backend.
 # ------------------------------------------------------------
 
 process_anchor = "void signal_init_process(void)"
@@ -152,12 +290,6 @@ static void install_bpf(struct sigaction *sig_act)
     struct sock_fprog prog;
     NTSTATUS status;
 
-    if (getenv("LINUWUX_SKIP_BPF_BOOTSTRAP"))
-    {
-        TRACE_(seh)("Skipping LinUwUx legacy BPF for bootstrap.\n");
-        return;
-    }
-
     if ((ULONG_PTR)sc_seccomp < NATIVE_SYSCALL_ADDRESS_START
             || (ULONG_PTR)syscall < NATIVE_SYSCALL_ADDRESS_START)
     {
@@ -244,7 +376,7 @@ s = s.replace(process_anchor, bpf_backend + process_anchor, 1)
 
 
 # ------------------------------------------------------------
-# 3. Install BPF at the end of signal_init_process().
+# 4. Install BPF at the end of signal_init_process().
 # ------------------------------------------------------------
 
 start = s.find(process_anchor)
@@ -273,11 +405,10 @@ s = s[:return_pos] + install_call + s[return_pos:]
 
 
 # ------------------------------------------------------------
-# 4. Sanity checks.
+# 5. Sanity checks.
 # ------------------------------------------------------------
 
 checks = {
-    "bootstrap BPF bypass": 'getenv("LINUWUX_SKIP_BPF_BOOTSTRAP")',
     "native syscall address": "#define NATIVE_SYSCALL_ADDRESS_START 0x700000000000",
     "fcntl header": "# include <fcntl.h>",
     "seccomp header": "# include <linux/seccomp.h>",
@@ -287,6 +418,9 @@ checks = {
     "sc_seccomp": "static int sc_seccomp(unsigned int operation",
     "install_bpf": "static void install_bpf(struct sigaction *sig_act)",
     "install_bpf call": "install_bpf(&sig_act);",
+    "LinUwUx SIGSYS hook": "linuwux_handle_sigsys(sigcontext)",
+    "legacy BPF probe": "RAX_sig(ucontext) == 0xffff",
+    "legacy BPF probe result": "RAX_sig(ucontext) = STATUS_INVALID_PARAMETER;",
 }
 
 for name, needle in checks.items():
@@ -295,5 +429,8 @@ for name, needle in checks.items():
 
 if "static LONG syscall_dispatch_enabled = TRUE;" in s:
     fail("SUD enable anchor remained after transformation")
+
+if "LINUWUX_SKIP_BPF_BOOTSTRAP" in s:
+    fail("diagnostic BPF bootstrap bypass remained after transformation")
 
 p.write_text(s)
