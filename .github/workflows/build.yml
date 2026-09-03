@@ -25,495 +25,314 @@ env:
   LINUWUX_BUILD_SUFFIX: "-Rework"
 
 jobs:
-build-proton:
-runs-on: ubuntu-24.04
+  build-proton:
+    runs-on: ubuntu-24.04
 
-permissions:
-  contents: write
+    permissions:
+      contents: write
 
-steps:
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  # ============================================================
-  # Checkout
-  # ============================================================
+      - name: Select Proton release
+        id: release-check
+        env:
+          PROTON_VARIANT: ${{ inputs.proton_variant }}
+          RELEASE_INPUT: ${{ inputs.release }}
+        run: |
+          set -euo pipefail
 
-  - name: Checkout repository
-    uses: actions/checkout@v4
+          RELEASE_INPUT="${RELEASE_INPUT%/}"
 
+          echo "========================================"
+          echo "Variant selected: $PROTON_VARIANT"
+          echo "Release input:    $RELEASE_INPUT"
+          echo "========================================"
 
-  # ============================================================
-  # Parse and validate selected release
-  # ============================================================
+          case "$PROTON_VARIANT" in
+            ge-proton)
+              UPSTREAM_REPO="GloriousEggroll/proton-ge-custom"
 
-  - name: Select Proton release
-    id: release-check
-    env:
-      PROTON_VARIANT: ${{ inputs.proton_variant }}
-      RELEASE_INPUT: ${{ inputs.release }}
-    run: |
-      set -euo pipefail
+              if [[ "$RELEASE_INPUT" =~ ^https://github\.com/GloriousEggroll/proton-ge-custom/releases/tag/([^/]+)$ ]]; then
+                PROTON_TAG="${BASH_REMATCH[1]}"
+              elif [[ "$RELEASE_INPUT" =~ ^GE-Proton.*$ ]]; then
+                PROTON_TAG="$RELEASE_INPUT"
+              else
+                echo "Invalid GE-Proton release."
+                echo
+                echo "Valid examples:"
+                echo "https://github.com/GloriousEggroll/proton-ge-custom/releases/tag/GE-Proton10-XX"
+                echo "GE-Proton10-XX"
+                exit 1
+              fi
 
-      RELEASE_INPUT="${RELEASE_INPUT%/}"
+              if [[ "$PROTON_TAG" != GE-Proton* ]]; then
+                echo "Invalid GE-Proton tag: $PROTON_TAG"
+                exit 1
+              fi
+              ;;
 
-      echo "========================================"
-      echo "Variant selected: $PROTON_VARIANT"
-      echo "Release input:    $RELEASE_INPUT"
-      echo "========================================"
+            cachy-proton)
+              UPSTREAM_REPO="CachyOS/proton-cachyos"
 
-      case "$PROTON_VARIANT" in
+              if [[ "$RELEASE_INPUT" =~ ^https://github\.com/CachyOS/proton-cachyos/releases/tag/([^/]+)$ ]]; then
+                PROTON_TAG="${BASH_REMATCH[1]}"
+              elif [[ "$RELEASE_INPUT" =~ ^cachyos-.*-slr$ ]]; then
+                PROTON_TAG="$RELEASE_INPUT"
+              else
+                echo "Invalid Proton-CachyOS release."
+                echo
+                echo "Valid examples:"
+                echo "https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-XXX-slr"
+                echo "cachyos-XXX-slr"
+                exit 1
+              fi
 
-        ge-proton)
+              if [[ "$PROTON_TAG" != cachyos-*-slr ]]; then
+                echo "Invalid Proton-CachyOS SLR tag: $PROTON_TAG"
+                exit 1
+              fi
+              ;;
 
-          UPSTREAM_REPO="GloriousEggroll/proton-ge-custom"
+            *)
+              echo "Unknown Proton variant: $PROTON_VARIANT"
+              exit 1
+              ;;
+          esac
 
-          if [[ "$RELEASE_INPUT" =~ ^https://github\.com/GloriousEggroll/proton-ge-custom/releases/tag/([^/]+)$ ]]
-          then
-            PROTON_TAG="${BASH_REMATCH[1]}"
+          echo
+          echo "Checking upstream release..."
+          echo "Repository: $UPSTREAM_REPO"
+          echo "Tag:        $PROTON_TAG"
 
-          elif [[ "$RELEASE_INPUT" =~ ^GE-Proton.*$ ]]
-          then
-            PROTON_TAG="$RELEASE_INPUT"
+          HTTP_CODE="$(
+            curl \
+              -s \
+              -o /dev/null \
+              -w "%{http_code}" \
+              "https://api.github.com/repos/$UPSTREAM_REPO/releases/tags/$PROTON_TAG"
+          )"
 
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo
+            echo "ERROR: Release does not exist."
+            echo
+            echo "Repository: $UPSTREAM_REPO"
+            echo "Tag:        $PROTON_TAG"
+            echo "HTTP status: $HTTP_CODE"
+            exit 1
+          fi
+
+          RELEASE_TAG="${PROTON_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
+
+          echo
+          echo "========================================"
+          echo "Proton variant: $PROTON_VARIANT"
+          echo "Repository:     $UPSTREAM_REPO"
+          echo "Source tag:     $PROTON_TAG"
+          echo "Output tag:     $RELEASE_TAG"
+          echo "========================================"
+
+          echo "proton-variant=$PROTON_VARIANT" >> "$GITHUB_OUTPUT"
+          echo "upstream-repo=$UPSTREAM_REPO" >> "$GITHUB_OUTPUT"
+          echo "proton-tag=$PROTON_TAG" >> "$GITHUB_OUTPUT"
+          echo "release-tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Free disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          docker system prune -af || true
+          df -h
+
+      - name: Check Docker
+        run: |
+          which docker || true
+          docker --version || true
+          docker info || true
+
+      - name: Install dependencies
+        run: ./scripts/install-deps.sh
+
+      - name: Build selected Proton
+        env:
+          PROTON_VARIANT: ${{ steps.release-check.outputs.proton-variant }}
+          PROTON_TAG: ${{ steps.release-check.outputs.proton-tag }}
+        run: |
+          set -euo pipefail
+
+          echo "========================================"
+          echo "Starting build"
+          echo "Variant: $PROTON_VARIANT"
+          echo "Tag:     $PROTON_TAG"
+          echo "========================================"
+
+          case "$PROTON_VARIANT" in
+            ge-proton)
+              ./scripts/build-ge.sh "$PROTON_TAG"
+              ;;
+            cachy-proton)
+              ./scripts/build-cachyos.sh "$PROTON_TAG"
+              ;;
+            *)
+              echo "Unknown Proton variant: $PROTON_VARIANT"
+              exit 1
+              ;;
+          esac
+
+      - name: Generate SHA-256 checksum
+        if: success()
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          archives=(output/*.tar.gz)
+
+          if [[ "${#archives[@]}" -ne 1 ]]; then
+            echo "ERROR: Expected exactly one .tar.gz archive."
+            echo
+            echo "Output directory contents:"
+            ls -lah output/ || true
+            exit 1
+          fi
+
+          archive="${archives[0]}"
+          checksum="${archive}.sha256"
+
+          (
+            cd "$(dirname "$archive")"
+            sha256sum "$(basename "$archive")" > "$(basename "$checksum")"
+          )
+
+          echo
+          echo "Checksum generated:"
+          echo
+          cat "$checksum"
+
+      - name: Upload Proton artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Proton-LinUwUx
+          path: output/
+          if-no-files-found: error
+
+      - name: Publish Proton release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PROTON_VARIANT: ${{ steps.release-check.outputs.proton-variant }}
+          UPSTREAM_REPO: ${{ steps.release-check.outputs.upstream-repo }}
+          PROTON_TAG: ${{ steps.release-check.outputs.proton-tag }}
+          EXPECTED_RELEASE_TAG: ${{ steps.release-check.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          archives=(output/*.tar.gz)
+
+          if [[ "${#archives[@]}" -ne 1 ]]; then
+            echo "ERROR: Expected exactly one archive."
+            ls -lah output/ || true
+            exit 1
+          fi
+
+          archive="${archives[0]}"
+          checksum="${archive}.sha256"
+
+          if [[ ! -f "$checksum" ]]; then
+            echo "ERROR: SHA-256 checksum file not found:"
+            echo "$checksum"
+            exit 1
+          fi
+
+          filename="$(basename "$archive")"
+          release_tag="${filename%.tar.gz}"
+
+          echo "Archive: $archive"
+          echo "Detected release tag: $release_tag"
+          echo "Expected release tag: $EXPECTED_RELEASE_TAG"
+
+          if [[ "$release_tag" != "$EXPECTED_RELEASE_TAG" ]]; then
+            echo "ERROR: Archive release tag does not match expected release tag."
+            echo "Archive tag:  $release_tag"
+            echo "Expected tag: $EXPECTED_RELEASE_TAG"
+            exit 1
+          fi
+
+          notes="$(
+            cat <<EOF
+          Automatically built from the selected upstream Proton release.
+
+          ## Proton Variant
+
+          \`$PROTON_VARIANT\`
+
+          ## Base
+
+          - Repository: https://github.com/$UPSTREAM_REPO
+          - Release: \`$PROTON_TAG\`
+
+          ## LinUwUx integration
+
+          - LinUwUx integration ported directly into the Proton and Wine source trees.
+
+          ## Build
+
+          - Source release: \`$PROTON_TAG\`
+          - Variant: \`$PROTON_VARIANT\`
+
+          ## Credits
+
+          Upstream Proton:
+          https://github.com/$UPSTREAM_REPO
+
+          LinUwUx:
+          https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989
+
+          _Built automatically with GitHub Actions._
+          EOF
+          )"
+
+          if gh release view "$release_tag" >/dev/null 2>&1; then
+            echo "Release already exists."
+            echo "Updating release..."
+
+            gh release edit \
+              "$release_tag" \
+              --title "$release_tag" \
+              --notes "$notes"
+
+            gh release upload \
+              "$release_tag" \
+              "$archive" \
+              "$checksum" \
+              --clobber
           else
-            echo "Invalid GE-Proton release."
+            echo "Creating new GitHub release..."
 
-            echo
-            echo "Valid examples:"
-            echo
-            echo "https://github.com/GloriousEggroll/proton-ge-custom/releases/tag/GE-Proton10-XX"
-            echo
-            echo "GE-Proton10-XX"
-
-            exit 1
+            gh release create \
+              "$release_tag" \
+              "$archive" \
+              "$checksum" \
+              --title "$release_tag" \
+              --notes "$notes"
           fi
 
-          if [[ "$PROTON_TAG" != GE-Proton* ]]
-          then
-            echo "Invalid GE-Proton tag:"
-            echo "$PROTON_TAG"
-            exit 1
-          fi
-          ;;
-
-
-        cachy-proton)
-
-          UPSTREAM_REPO="CachyOS/proton-cachyos"
-
-          if [[ "$RELEASE_INPUT" =~ ^https://github\.com/CachyOS/proton-cachyos/releases/tag/([^/]+)$ ]]
-          then
-            PROTON_TAG="${BASH_REMATCH[1]}"
-
-          elif [[ "$RELEASE_INPUT" =~ ^cachyos-.*-slr$ ]]
-          then
-            PROTON_TAG="$RELEASE_INPUT"
-
-          else
-            echo "Invalid Proton-CachyOS release."
-
-            echo
-            echo "Valid examples:"
-            echo
-            echo "https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-XXX-slr"
-            echo
-            echo "cachyos-XXX-slr"
-
-            exit 1
-          fi
-
-          if [[ "$PROTON_TAG" != cachyos-*-slr ]]
-          then
-            echo "Invalid Proton-CachyOS SLR tag:"
-            echo "$PROTON_TAG"
-            exit 1
-          fi
-          ;;
-
-
-        *)
-
-          echo "Unknown Proton variant:"
-          echo "$PROTON_VARIANT"
-
-          exit 1
-          ;;
-      esac
-
-
-      # ========================================================
-      # Verify release exists
-      # ========================================================
-
-      echo
-      echo "Checking upstream release..."
-      echo "Repository: $UPSTREAM_REPO"
-      echo "Tag:        $PROTON_TAG"
-
-      HTTP_CODE="$(
-        curl \
-          -s \
-          -o /dev/null \
-          -w "%{http_code}" \
-          "https://api.github.com/repos/$UPSTREAM_REPO/releases/tags/$PROTON_TAG"
-      )"
-
-      if [[ "$HTTP_CODE" != "200" ]]
-      then
-        echo
-        echo "ERROR: Release does not exist."
-        echo
-        echo "Repository: $UPSTREAM_REPO"
-        echo "Tag:        $PROTON_TAG"
-        echo "HTTP status: $HTTP_CODE"
-
-        exit 1
-      fi
-
-
-      # ========================================================
-      # Generate output release tag
-      # ========================================================
-
-      RELEASE_TAG="${PROTON_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
-
-
-      echo
-      echo "========================================"
-      echo "Proton variant: $PROTON_VARIANT"
-      echo "Repository:     $UPSTREAM_REPO"
-      echo "Source tag:     $PROTON_TAG"
-      echo "Output tag:     $RELEASE_TAG"
-      echo "========================================"
-
-
-      echo "proton-variant=$PROTON_VARIANT" >> "$GITHUB_OUTPUT"
-      echo "upstream-repo=$UPSTREAM_REPO" >> "$GITHUB_OUTPUT"
-      echo "proton-tag=$PROTON_TAG" >> "$GITHUB_OUTPUT"
-      echo "release-tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
-
-
-  # ============================================================
-  # Make scripts executable
-  # ============================================================
-
-  - name: Make scripts executable
-    run: |
-      chmod +x scripts/*.sh
-
-
-  # ============================================================
-  # Free disk space
-  # ============================================================
-
-  - name: Free disk space
-    run: |
-      df -h
-
-      sudo rm -rf /usr/share/dotnet
-      sudo rm -rf /usr/local/lib/android
-      sudo rm -rf /opt/ghc
-
-      docker system prune -af || true
-
-      df -h
-
-
-  # ============================================================
-  # Check Docker
-  # ============================================================
-
-  - name: Check Docker
-    run: |
-      which docker || true
-
-      docker --version || true
-
-      docker info || true
-
-
-  # ============================================================
-  # Install dependencies
-  # ============================================================
-
-  - name: Install dependencies
-    run: |
-      ./scripts/install-deps.sh
-
-
-  # ============================================================
-  # Build selected Proton
-  # ============================================================
-
-  - name: Build selected Proton
-    env:
-      PROTON_VARIANT: ${{ steps.release-check.outputs.proton-variant }}
-      PROTON_TAG: ${{ steps.release-check.outputs.proton-tag }}
-    run: |
-      set -euo pipefail
-
-      echo "========================================"
-      echo "Starting build"
-      echo "Variant: $PROTON_VARIANT"
-      echo "Tag:     $PROTON_TAG"
-      echo "========================================"
-
-      case "$PROTON_VARIANT" in
-
-        ge-proton)
-
-          ./scripts/build-ge.sh \
-            "$PROTON_TAG"
-
-          ;;
-
-
-        cachy-proton)
-
-          ./scripts/build-cachyos.sh \
-            "$PROTON_TAG"
-
-          ;;
-
-
-        *)
-
-          echo "Unknown Proton variant: $PROTON_VARIANT"
-
-          exit 1
-          ;;
-      esac
-
-
-  # ============================================================
-  # Generate SHA256
-  # ============================================================
-
-  - name: Generate SHA-256 checksum
-    if: success()
-    run: |
-      set -euo pipefail
-
-      shopt -s nullglob
-
-      archives=(output/*.tar.gz)
-
-      if [[ "${#archives[@]}" -ne 1 ]]
-      then
-        echo "ERROR: Expected exactly one .tar.gz archive."
-
-        echo
-        echo "Output directory contents:"
-
-        ls -lah output/ || true
-
-        exit 1
-      fi
-
-
-      archive="${archives[0]}"
-      checksum="${archive}.sha256"
-
-
-      (
-        cd "$(dirname "$archive")"
-
-        sha256sum \
-          "$(basename "$archive")" \
-          > "$(basename "$checksum")"
-      )
-
-
-      echo
-      echo "Checksum generated:"
-      echo
-
-      cat "$checksum"
-
-
-  # ============================================================
-  # Upload build artifact
-  # ============================================================
-
-  - name: Upload Proton artifact
-    if: success()
-    uses: actions/upload-artifact@v4
-    with:
-      name: Proton-LinUwUx
-      path: output/
-      if-no-files-found: error
-
-
-  # ============================================================
-  # Publish GitHub Release
-  # ============================================================
-
-  - name: Publish Proton release
-    if: success()
-    env:
-      GH_TOKEN: ${{ github.token }}
-
-      PROTON_VARIANT: ${{ steps.release-check.outputs.proton-variant }}
-      UPSTREAM_REPO: ${{ steps.release-check.outputs.upstream-repo }}
-      PROTON_TAG: ${{ steps.release-check.outputs.proton-tag }}
-
-      EXPECTED_RELEASE_TAG: ${{ steps.release-check.outputs.release-tag }}
-
-    run: |
-      set -euo pipefail
-
-      shopt -s nullglob
-
-      archives=(output/*.tar.gz)
-
-
-      if [[ "${#archives[@]}" -ne 1 ]]
-      then
-        echo "ERROR: Expected exactly one archive."
-
-        ls -lah output/ || true
-
-        exit 1
-      fi
-
-
-      archive="${archives[0]}"
-
-      checksum="${archive}.sha256"
-
-
-      if [[ ! -f "$checksum" ]]
-      then
-        echo "ERROR: SHA-256 checksum file not found:"
-        echo "$checksum"
-
-        exit 1
-      fi
-
-
-      filename="$(basename "$archive")"
-
-      release_tag="${filename%.tar.gz}"
-
-
-      echo "Archive:"
-      echo "$archive"
-
-      echo
-
-      echo "Detected release tag:"
-      echo "$release_tag"
-
-      echo
-
-      echo "Expected release tag:"
-      echo "$EXPECTED_RELEASE_TAG"
-
-
-      # Prevent accidentally publishing under the wrong tag
-
-      if [[ "$release_tag" != "$EXPECTED_RELEASE_TAG" ]]
-      then
-        echo
-        echo "ERROR: Archive release tag does not match expected release tag."
-
-        echo
-        echo "Archive tag:  $release_tag"
-        echo "Expected tag: $EXPECTED_RELEASE_TAG"
-
-        exit 1
-      fi
-
-
-      notes="$(
-        cat <<EOF
-      Automatically built from the selected upstream Proton release.
-
-      ## Proton Variant
-
-      \`$PROTON_VARIANT\`
-
-      ## Base
-
-      - Repository: https://github.com/$UPSTREAM_REPO
-      - Release: \`$PROTON_TAG\`
-
-      ## LinUwUx integration
-
-      - LinUwUx integration ported directly into the Proton and Wine source trees.
-
-      ## Build
-
-      - Source release: \`$PROTON_TAG\`
-      - Variant: \`$PROTON_VARIANT\`
-
-      ## Credits
-
-      Upstream Proton:
-      https://github.com/$UPSTREAM_REPO
-
-      LinUwUx:
-      https://cs.rin.ru/forum/viewtopic.php?f=10&t=159989
-
-      _Built automatically with GitHub Actions._
-      EOF
-      )"
-
-
-      if gh release view "$release_tag" \
-        >/dev/null \name: Build Proton-GE/Proton-CachyOS LinUwUx
-
-on:
-    workflow_dispatch:
-
-    schedule:
-      - cron: "37 * * * *"
-        2>&1
-      then
-
-        echo "Release already exists."
-
-        echo "Updating release..."
-
-        gh release edit \
-          "$release_tag" \
-          --title "$release_tag" \
-          --notes "$notes"
-
-
-        gh release upload \
-          "$release_tag" \
-          "$archive" \
-          "$checksum" \
-          --clobber
-
-
-      else
-
-        echo "Creating new GitHub release..."
-
-
-        gh release create \
-          "$release_tag" \
-          "$archive" \
-          "$checksum" \
-          --title "$release_tag" \
-          --notes "$notes"
-
-      fi
-
-
-  # ============================================================
-  # Upload diagnostic logs
-  # ============================================================
-
-  - name: Upload diagnostic logs
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: Proton-build-logs
-      path: |
-        build-ge.log
-        build-cachyos.log
-        work/**/patchlog.txt
-      if-no-files-found: warn
-      retention-days: 7
+      - name: Upload diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Proton-build-logs
+          path: |
+            build-ge.log
+            build-cachyos.log
+            work/**/patchlog.txt
+          if-no-files-found: warn
+          retention-days: 7
