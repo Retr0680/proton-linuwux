@@ -1,182 +1,170 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 WORKDIR="$ROOT_DIR/work"
-OUTPUT="$ROOT_DIR/output"
+OUTPUT_DIR="$ROOT_DIR/output"
 
-LINUWUX_BUILD_SUFFIX="${LINUWUX_BUILD_SUFFIX:-}"
+LINUWUX_BUILD_SUFFIX="${LINUWUX_BUILD_SUFFIX:--Rework}"
+
+CACHYOS_REPO="https://github.com/CachyOS/proton-cachyos.git"
 
 mkdir -p "$WORKDIR"
-mkdir -p "$OUTPUT"
+mkdir -p "$OUTPUT_DIR"
 
 echo "== Selecting Proton-CachyOS release =="
 
 CACHYOS_TAG="${1:-${CACHYOS_TAG:-}}"
 
-if [[ -z "$CACHYOS_TAG" ]]
-then
-echo "Error: no Proton-CachyOS tag specified."
-echo "Usage:"
-echo "$0 <cachyos-tag>"
-exit 1
+if [[ -z "$CACHYOS_TAG" ]]; then
+    echo "Error: No Proton-CachyOS tag specified."
+    echo "Usage: $0 <cachyos-tag>"
+    exit 1
 fi
 
-if [[ "$CACHYOS_TAG" != cachyos-*-slr ]]
-then
-echo "Error: the tag does not appear to be a Proton-CachyOS SLR release:"
-echo "$CACHYOS_TAG"
-exit 1
+if [[ "$CACHYOS_TAG" != cachyos-*-slr ]]; then
+    echo "Error: Invalid Proton-CachyOS SLR tag."
+    echo "Tag: $CACHYOS_TAG"
+    exit 1
 fi
 
 echo "Selected release: $CACHYOS_TAG"
 
-CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
-CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
+echo "== Verifying Proton-CachyOS tag =="
 
-BUILD_NAME="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}"
-
-echo "Source tag: $CACHYOS_TAG"
-echo "Build name: $BUILD_NAME"
-
-echo "== Verifying tag exists =="
-
-if ! git ls-remote 
---exit-code 
---tags 
-https://github.com/CachyOS/proton-cachyos.git 
-"refs/tags/$CACHYOS_TAG" 
->/dev/null
-then
-echo "Error: source tag does not exist:"
-echo "$CACHYOS_TAG"
-exit 1
+if ! git ls-remote --exit-code --tags "$CACHYOS_REPO" "refs/tags/$CACHYOS_TAG" >/dev/null 2>&1; then
+    echo "Error: Proton-CachyOS tag does not exist."
+    echo "Tag: $CACHYOS_TAG"
+    exit 1
 fi
 
 echo "Proton-CachyOS tag verified successfully."
 
+SOURCE_DIR="$WORKDIR/proton-cachyos"
+BUILD_DIR="$WORKDIR/proton-cachyos-build"
+
+BUILD_NAME="${CACHYOS_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
+
+echo "Source tag: $CACHYOS_TAG"
+echo "Build name: $BUILD_NAME"
+
+echo "== Preparing workspace =="
+
+rm -rf "$SOURCE_DIR"
+rm -rf "$BUILD_DIR"
+rm -rf "$OUTPUT_DIR"
+
+mkdir -p "$BUILD_DIR"
+mkdir -p "$OUTPUT_DIR"
+
 echo "== Cloning Proton-CachyOS =="
 
-cd "$WORKDIR"
+git clone \
+    --branch "$CACHYOS_TAG" \
+    --single-branch \
+    --depth 1 \
+    "$CACHYOS_REPO" \
+    "$SOURCE_DIR"
 
-rm -rf proton-cachyos
-
-git clone 
---branch "$CACHYOS_TAG" 
---single-branch 
---tags 
-https://github.com/CachyOS/proton-cachyos.git 
-proton-cachyos
-
-cd proton-cachyos
+cd "$SOURCE_DIR"
 
 echo "== Updating submodules =="
 
 git submodule sync --recursive
 
-for attempt in 1 2 3 4 5
-do
-echo "Submodule attempt $attempt of 5"
+for attempt in 1 2 3 4 5; do
+    echo "Submodule initialization attempt $attempt of 5"
 
-```
-if git submodule update \
-    --init \
-    --recursive \
-    --checkout \
-    --force \
-    --jobs 1
-then
-    break
-fi
+    if git submodule update --init --recursive --checkout --force --jobs 1; then
+        echo "Submodules initialized successfully."
+        break
+    fi
 
-if [ "$attempt" -eq 5 ]
-then
-    echo "Error: unable to download all submodules after 5 attempts."
-    exit 1
-fi
+    if [[ "$attempt" -eq 5 ]]; then
+        echo "Error: Failed to initialize submodules after 5 attempts."
+        exit 1
+    fi
 
-wait_seconds=$((attempt * 60))
+    wait_seconds=$((attempt * 30))
 
-echo "Download failed. Waiting $wait_seconds seconds before retrying..."
-sleep "$wait_seconds"
-```
+    echo "Submodule initialization failed."
+    echo "Retrying in $wait_seconds seconds..."
 
+    sleep "$wait_seconds"
 done
 
-echo "== Applying LinUwUx rework =="
+echo "== Applying LinUwUx integration =="
 
 LINUWUX_APPLY="$ROOT_DIR/scripts/linuwux/apply.sh"
 
-if [[ ! -f "$LINUWUX_APPLY" ]]
-then
-echo "Error: LinUwUx script not found:"
-echo "$LINUWUX_APPLY"
-exit 1
+if [[ ! -f "$LINUWUX_APPLY" ]]; then
+    echo "Error: LinUwUx apply script not found."
+    echo "Expected path: $LINUWUX_APPLY"
+    exit 1
 fi
 
-cd "$WORKDIR/proton-cachyos"
+bash "$LINUWUX_APPLY" "$SOURCE_DIR"
 
-bash "$LINUWUX_APPLY" "$PWD"
-
-echo "LinUwUx rework applied successfully."
-
-echo "== Preparing build directory =="
-
-BUILD_DIR="$WORKDIR/proton-cachyos-build"
-
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
-
-cd "$BUILD_DIR"
-
-echo "Source directory: $WORKDIR/proton-cachyos"
-echo "Build directory: $BUILD_DIR"
+echo "LinUwUx integration applied successfully."
 
 echo "== Configuring Proton-CachyOS =="
 
-"$WORKDIR/proton-cachyos/configure.sh" 
---build-name="$BUILD_NAME" 
---enable-ccache
+cd "$BUILD_DIR"
+
+"$SOURCE_DIR/configure.sh" \
+    --build-name="$BUILD_NAME" \
+    --enable-ccache
 
 echo "== Building Proton-CachyOS =="
 
 make V=1 VERBOSE=1 redist 2>&1 | tee "$ROOT_DIR/build-cachyos.log"
 
-echo "== Creating final archive =="
+echo "== Locating build archive =="
 
-UPSTREAM_ARCHIVE="$BUILD_DIR/$BUILD_NAME.tar.xz"
-PACKAGE_DIR="$WORKDIR/$BUILD_NAME"
-ARCHIVE="$OUTPUT/$BUILD_NAME.tar.gz"
+mapfile -t ARCHIVES < <(
+    find "$BUILD_DIR" \
+        -maxdepth 1 \
+        -type f \
+        \( -name "*.tar.gz" -o -name "*.tar.xz" \) \
+        -print
+)
 
-if [[ ! -f "$UPSTREAM_ARCHIVE" ]]
-then
-echo "Error: Proton-CachyOS build archive not found:"
-echo "$UPSTREAM_ARCHIVE"
-exit 1
+if [[ "${#ARCHIVES[@]}" -eq 0 ]]; then
+    echo "Error: No Proton-CachyOS build archive was found."
+
+    echo "Build directory contents:"
+    ls -lah "$BUILD_DIR" || true
+
+    exit 1
 fi
 
-rm -rf "$PACKAGE_DIR"
-rm -f "$ARCHIVE"
+echo "Found build archives:"
 
-echo "Extracting Proton-CachyOS archive..."
+printf '%s\n' "${ARCHIVES[@]}"
 
-tar -C "$WORKDIR" 
--xJf "$UPSTREAM_ARCHIVE"
+ARCHIVE="${ARCHIVES[0]}"
 
-if [[ ! -d "$PACKAGE_DIR" ]]
-then
-echo "Error: extracted build directory not found:"
-echo "$PACKAGE_DIR"
-exit 1
+FINAL_ARCHIVE="$OUTPUT_DIR/${BUILD_NAME}.tar.gz"
+
+echo "== Preparing final archive =="
+
+if [[ "$ARCHIVE" == *.tar.gz ]]; then
+    cp "$ARCHIVE" "$FINAL_ARCHIVE"
+else
+    TEMP_DIR="$WORKDIR/cachy-package"
+
+    rm -rf "$TEMP_DIR"
+    mkdir -p "$TEMP_DIR"
+
+    tar -xf "$ARCHIVE" -C "$TEMP_DIR"
+
+    tar -C "$TEMP_DIR" -czf "$FINAL_ARCHIVE" .
 fi
 
-echo "Converting to tar.gz archive..."
+echo "== Proton-CachyOS build completed successfully =="
 
-tar -C "$WORKDIR" 
--czf "$ARCHIVE" 
-"$BUILD_NAME"
+echo "Output archive:"
+echo "$FINAL_ARCHIVE"
 
-echo "Build completed successfully:"
-echo "$ARCHIVE"
+ls -lh "$OUTPUT_DIR"
