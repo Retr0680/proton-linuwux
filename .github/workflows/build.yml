@@ -1,28 +1,28 @@
 name: Build Proton LinUwUx
 
 on:
-workflow_dispatch:
-inputs:
-proton_variant:
-description: "Select Proton variant"
-required: true
-type: choice
-default: ge-proton
-options:
-- ge-proton
-- cachy-proton
+  workflow_dispatch:
+    inputs:
+      proton_variant:
+        description: "Select Proton variant"
+        required: true
+        type: choice
+        default: ge-proton
+        options:
+          - ge-proton
+          - cachy-proton
 
-  release:
-    description: "GitHub release URL or release tag"
-    required: true
-    type: string
+      release:
+        description: "GitHub release URL or release tag"
+        required: true
+        type: string
 
 concurrency:
-group: build-proton
-cancel-in-progress: false
+  group: build-proton
+  cancel-in-progress: false
 
 env:
-LINUWUX_BUILD_SUFFIX: "-Rework"
+  LINUWUX_BUILD_SUFFIX: "-Rework"
 
 jobs:
 build-proton:
