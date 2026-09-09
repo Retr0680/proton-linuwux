@@ -44,7 +44,7 @@ The patch originates from the relevant discussion on [cs.rin.ru](https://cs.rin.
 
 > [!NOTE]
 > This project depends on maintaining patched Proton builds and may become outdated as Proton and Wine evolve.
-> Users looking for an alternative approach may want to consider [Shaduwulf's LinUwUx Runtime](https://github.com/xshaduwulfx/shaduwulf-linuwux-runtime), a standalone runtime implementation that does not require a patched Proton build.
+> Users looking for an alternative approach may want to consider [Shaduwulf's LinUwUx Runtime](https://github.com/retr0680/shaduwulf-linuwux-runtime), a standalone runtime implementation that does not require a patched Proton build.
 
 > [!IMPORTANT]
 > These builds contain no additional performance tweaks or unrelated changes.  
@@ -71,7 +71,7 @@ Ready-to-use builds are available from the project’s:
 
 <p align="center">
   <strong>
-    <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">GitHub Releases</a>
+    <a href="https://github.com/retr0680/proton-linuwux/releases">GitHub Releases</a>
   </strong>
 </p>
 
@@ -81,7 +81,7 @@ Each release archive contains a complete compatibility-tool directory that can b
 
 ### Steam
 
-1. Download the desired archive from [GitHub Releases](https://github.com/xshaduwulfx/proton-linuwux/releases).
+1. Download the desired archive from [GitHub Releases](https://github.com/retr0680/proton-linuwux/releases).
 2. Extract it into one of the following directories:
 
    ```text
