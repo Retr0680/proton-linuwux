@@ -7,22 +7,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">
-    <img src="https://img.shields.io/github/v/release/xshaduwulfx/proton-linuwux?label=Latest%20Version" alt="Latest Version">
+  <a href="https://github.com/retr0680/proton-linuwux/releases">
+    <img src="https://img.shields.io/github/v/release/retr0680/proton-linuwux?label=Latest%20Version" alt="Latest Version">
   </a>
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml">
-    <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-ge.yml/badge.svg" alt="Proton-GE Build">
+  <a href="https://github.com/retr0680/proton-linuwux/actions/workflows/build-ge.yml">
+    <img src="https://github.com/retr0680/proton-linuwux/actions/workflows/build-ge.yml/badge.svg" alt="Proton-GE Build">
   </a>
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml">
-    <img src="https://github.com/xshaduwulfx/proton-linuwux/actions/workflows/build-cachyos.yml/badge.svg" alt="Proton-CachyOS Build">
+  <a href="https://github.com/retr0680/proton-linuwux/actions/workflows/build-cachyos.yml">
+    <img src="https://github.com/retr0680/proton-linuwux/actions/workflows/build-cachyos.yml/badge.svg" alt="Proton-CachyOS Build">
   </a>
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/stargazers">
-    <img src="https://img.shields.io/github/stars/xshaduwulfx/proton-linuwux?style=flat" alt="GitHub Stars">
+  <a href="https://github.com/retr0680/proton-linuwux/stargazers">
+    <img src="https://img.shields.io/github/stars/retr0680/proton-linuwux?style=flat" alt="GitHub Stars">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/xshaduwulfx/proton-linuwux/releases">Downloads</a>
+  <a href="https://github.com/retr0680/proton-linuwux/releases">Downloads</a>
   ·
   <a href="#features">Features</a>
   ·
