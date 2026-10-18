@@ -88,7 +88,7 @@ for attempt in 1 2 3 4 5; do
     sleep "$wait_seconds"
 done
 
-echo "== Verifying required files =="
+echo "== Fixing stale protonfixes dependency URL =="\nbash "$ROOT_DIR/scripts/fix-protonfixes-unzip-url.sh" "$SOURCE_DIR"\n\necho "== Verifying required files =="
 
 if [[ ! -f "$SOURCE_DIR/openfst/configure.ac" ]]; then
     echo "Error: openfst/configure.ac is missing."
