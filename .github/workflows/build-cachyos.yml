@@ -2,9 +2,11 @@ name: Build Proton-CachyOS LinUwUx
 
 on:
   workflow_dispatch:
-
-  schedule:
-    - cron: "17 * * * *"
+    inputs:
+      upstream_release:
+        description: "Upstream Proton-CachyOS SLR release tag or GitHub release URL"
+        required: true
+        type: string
 
 concurrency:
   group: build-cachyos
@@ -24,16 +26,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check whether a new build is needed
+      - name: Validate selected upstream release
         id: release-check
         env:
-          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_RELEASE: ${{ inputs.upstream_release }}
         run: |
-          CACHYOS_TAG="$(
-            curl -fsSL \
-              https://api.github.com/repos/CachyOS/proton-cachyos/releases/latest |
-            python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
-          )"
+          set -euo pipefail
+          RELEASE_INPUT="${UPSTREAM_RELEASE%/}"
+          if [[ "$RELEASE_INPUT" =~ ^https://github\.com/CachyOS/proton-cachyos/releases/tag/([^/]+)$ ]]; then
+            CACHYOS_TAG="${BASH_REMATCH[1]}"
+          else
+            CACHYOS_TAG="$RELEASE_INPUT"
+          fi
 
           if [[ -z "$CACHYOS_TAG" ]]
           then
@@ -41,33 +45,19 @@ jobs:
             exit 1
           fi
 
-          CACHYOS_VERSION="${CACHYOS_TAG#cachyos-}"
-          CACHYOS_VERSION="${CACHYOS_VERSION%-slr}"
-
-          RELEASE_TAG="proton-cachyos-${CACHYOS_VERSION}-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}"
+          RELEASE_TAG="${CACHYOS_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
           echo "Release upstream: $CACHYOS_TAG"
           echo "Release LinUwUx prevista: $RELEASE_TAG"
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]
+          if ! git ls-remote --exit-code --tags "https://github.com/CachyOS/proton-cachyos.git" "refs/tags/$CACHYOS_TAG" >/dev/null 2>&1
           then
-            echo "Avvio manuale: la build verrà eseguita comunque."
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-
-          elif git ls-remote \
-            --exit-code \
-            --tags \
-            "https://github.com/${GITHUB_REPOSITORY}.git" \
-            "refs/tags/$RELEASE_TAG" \
-            >/dev/null
-          then
-            echo "La Release LinUwUx esiste già: nessuna compilazione necessaria."
-            echo "should-build=false" >> "$GITHUB_OUTPUT"
-
-          else
-            echo "Nuova Release rilevata: avvio della compilazione."
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
+            echo "Error: upstream Proton-CachyOS tag does not exist: $CACHYOS_TAG"
+            exit 1
           fi
+
+          echo "upstream-tag=$CACHYOS_TAG" >> "$GITHUB_OUTPUT"
+          echo "should-build=true" >> "$GITHUB_OUTPUT"
 
       - name: Make scripts executable
         if: steps.release-check.outputs.should-build == 'true'
@@ -100,15 +90,17 @@ jobs:
 
       - name: Build Proton-CachyOS
         if: steps.release-check.outputs.should-build == 'true'
+        env:
+          CACHYOS_TAG: ${{ steps.release-check.outputs.upstream-tag }}
         run: |
-          ./scripts/build-cachyos.sh
+          ./scripts/build-cachyos.sh "$CACHYOS_TAG"
 
       - name: Generate Proton-CachyOS SHA-256 checksum
         if: steps.release-check.outputs.should-build == 'true' && success()
         run: |
           shopt -s nullglob
 
-          archives=(output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
+          archives=(output/cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
@@ -134,8 +126,8 @@ jobs:
         with:
           name: Proton-CachyOS-LinUwUx
           path: |
-            output/proton-cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz
-            output/proton-cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz.sha256
+            output/cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz
+            output/cachyos-*-slr-LinUwUx${{ env.LINUWUX_BUILD_SUFFIX }}.tar.gz.sha256
           if-no-files-found: error
 
       - name: Publish Proton-CachyOS release
@@ -145,7 +137,7 @@ jobs:
         run: |
           shopt -s nullglob
 
-          archives=(output/proton-cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
+          archives=(output/cachyos-*-slr-LinUwUx${LINUWUX_BUILD_SUFFIX}.tar.gz)
 
           if [ "${#archives[@]}" -ne 1 ]
           then
