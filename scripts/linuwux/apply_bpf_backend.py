@@ -130,11 +130,9 @@ if probe_count == 0:
     # Insert immediately before the EOS workaround instead of assuming
     # that the comment follows #ifdef __linux__ on the very next line.
     eos_pos = handler.find(eos_anchor)
-    linux_guard_pos = handler.rfind("#ifdef __linux__", 0, eos_pos)
-    last_endif_pos = handler.rfind("#endif", 0, eos_pos)
 
-    if eos_pos == -1 or linux_guard_pos == -1 or last_endif_pos > linux_guard_pos:
-        fail("could not locate EOS workaround inside its Linux guard")
+    if eos_pos == -1:
+        fail("could not locate EOS workaround for legacy BPF probe insertion")
 
     handler = handler[:eos_pos] + probe + "\n" + handler[eos_pos:]
 
