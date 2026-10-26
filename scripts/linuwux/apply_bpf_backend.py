@@ -125,22 +125,18 @@ if handler.count(eos_anchor) != 1:
 probe_count = handler.count(probe)
 
 if probe_count == 0:
-    # The probe belongs inside the existing Linux block, directly
-    # before the EOS workaround.  Preserve that guard rather than
-    # manufacturing a second #ifdef/#endif pair.
-    linux_eos_anchor = "#ifdef __linux__\n" + eos_anchor
+    # Proton-GE's Wine patch stack can add comments, blank lines, or
+    # other Linux-only statements between the guard and the EOS block.
+    # Insert immediately before the EOS workaround instead of assuming
+    # that the comment follows #ifdef __linux__ on the very next line.
+    eos_pos = handler.find(eos_anchor)
+    linux_guard_pos = handler.rfind("#ifdef __linux__", 0, eos_pos)
+    last_endif_pos = handler.rfind("#endif", 0, eos_pos)
 
-    if handler.count(linux_eos_anchor) != 1:
-        fail(
-            "expected Linux EOS block immediately after SUD fallback "
-            "removal"
-        )
+    if eos_pos == -1 or linux_guard_pos == -1 or last_endif_pos > linux_guard_pos:
+        fail("could not locate EOS workaround inside its Linux guard")
 
-    handler = handler.replace(
-        linux_eos_anchor,
-        "#ifdef __linux__\n" + probe + "\n" + eos_anchor,
-        1,
-    )
+    handler = handler[:eos_pos] + probe + "\n" + handler[eos_pos:]
 
 elif probe_count != 1:
     fail(
