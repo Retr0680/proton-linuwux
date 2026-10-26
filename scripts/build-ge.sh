@@ -88,7 +88,10 @@ for attempt in 1 2 3 4 5; do
     sleep "$wait_seconds"
 done
 
-echo "== Fixing stale protonfixes dependency URL =="\nbash "$ROOT_DIR/scripts/fix-protonfixes-unzip-url.sh" "$SOURCE_DIR"\n\necho "== Verifying required files =="
+echo "== Fixing stale protonfixes dependency URL =="
+bash "$ROOT_DIR/scripts/fix-protonfixes-unzip-url.sh" "$SOURCE_DIR"
+
+echo "== Verifying required files =="
 
 if [[ ! -f "$SOURCE_DIR/openfst/configure.ac" ]]; then
     echo "Error: openfst/configure.ac is missing."
@@ -179,7 +182,8 @@ fi
 
 echo "Found build archives:"
 
-printf '%s\n' "${ARCHIVES[@]}"
+printf '%s
+' "${ARCHIVES[@]}"
 
 ARCHIVE="${ARCHIVES[0]}"
 

@@ -2,9 +2,11 @@ name: Build Proton-GE LinUwUx
 
 on:
   workflow_dispatch:
-
-  schedule:
-    - cron: "37 * * * *"
+    inputs:
+      upstream_release:
+        description: "Upstream Proton-GE release tag or GitHub release URL"
+        required: true
+        type: string
 
 concurrency:
   group: build-ge
@@ -24,14 +26,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check whether a new build is needed
+      - name: Validate selected upstream release
         id: release-check
+        env:
+          UPSTREAM_RELEASE: ${{ inputs.upstream_release }}
         run: |
-          GE_TAG="$(
-            curl -fsSL \
-              https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest |
-            python3 -c 'import json, sys; print(json.load(sys.stdin)["tag_name"])'
-          )"
+          set -euo pipefail
+          RELEASE_INPUT="${UPSTREAM_RELEASE%/}"
+          if [[ "$RELEASE_INPUT" =~ ^https://github\.com/GloriousEggroll/proton-ge-custom/releases/tag/([^/]+)$ ]]; then
+            GE_TAG="${BASH_REMATCH[1]}"
+          else
+            GE_TAG="$RELEASE_INPUT"
+          fi
 
           if [[ -z "$GE_TAG" ]]
           then
@@ -46,30 +52,24 @@ jobs:
             exit 1
           fi
 
+          if ! git ls-remote --exit-code --tags "https://github.com/GloriousEggroll/proton-ge-custom.git" "refs/tags/$GE_TAG" >/dev/null 2>&1
+          then
+            echo "Error: upstream Proton-GE tag does not exist: $GE_TAG"
+            exit 1
+          fi
+
+          if ! git ls-remote --exit-code --tags "https://github.com/GloriousEggroll/proton-ge-custom.git" "refs/tags/$GE_TAG" >/dev/null 2>&1; then
+            echo "Error: upstream Proton-GE tag does not exist: $GE_TAG"
+            exit 1
+          fi
+
           RELEASE_TAG="${GE_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
           echo "Release upstream: $GE_TAG"
           echo "Release LinUwUx prevista: $RELEASE_TAG"
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]
-          then
-            echo "Avvio manuale: la build verrà eseguita comunque."
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-
-          elif git ls-remote \
-            --exit-code \
-            --tags \
-            "https://github.com/${GITHUB_REPOSITORY}.git" \
-            "refs/tags/$RELEASE_TAG" \
-            >/dev/null
-          then
-            echo "La Release LinUwUx esiste già: nessuna compilazione necessaria."
-            echo "should-build=false" >> "$GITHUB_OUTPUT"
-
-          else
-            echo "Nuova Release rilevata: avvio della compilazione."
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "upstream-tag=$GE_TAG" >> "$GITHUB_OUTPUT"
+          echo "should-build=true" >> "$GITHUB_OUTPUT"
 
       - name: Make scripts executable
         if: steps.release-check.outputs.should-build == 'true'
@@ -102,8 +102,10 @@ jobs:
 
       - name: Build Proton-GE
         if: steps.release-check.outputs.should-build == 'true'
+        env:
+          GE_TAG: ${{ steps.release-check.outputs.upstream-tag }}
         run: |
-          ./scripts/build-ge.sh
+          ./scripts/build-ge.sh "$GE_TAG"
 
       - name: Generate Proton-GE SHA-256 checksum
         if: steps.release-check.outputs.should-build == 'true' && success()

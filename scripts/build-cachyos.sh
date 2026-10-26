@@ -94,7 +94,10 @@ for attempt in 1 2 3 4 5; do
     sleep "$wait_seconds"
 done
 
-echo "== Fixing stale protonfixes dependency URL =="\nbash "$ROOT_DIR/scripts/fix-protonfixes-unzip-url.sh" "$SOURCE_DIR"\n\necho "== Applying LinUwUx integration =="
+echo "== Fixing stale protonfixes dependency URL =="
+bash "$ROOT_DIR/scripts/fix-protonfixes-unzip-url.sh" "$SOURCE_DIR"
+
+echo "== Applying LinUwUx integration =="
 
 LINUWUX_APPLY="$ROOT_DIR/scripts/linuwux/apply.sh"
 
@@ -141,7 +144,8 @@ fi
 
 echo "Found build archives:"
 
-printf '%s\n' "${ARCHIVES[@]}"
+printf '%s
+' "${ARCHIVES[@]}"
 
 ARCHIVE="${ARCHIVES[0]}"
 
