@@ -58,6 +58,11 @@ jobs:
             exit 1
           fi
 
+          if ! git ls-remote --exit-code --tags "https://github.com/GloriousEggroll/proton-ge-custom.git" "refs/tags/$GE_TAG" >/dev/null 2>&1; then
+            echo "Error: upstream Proton-GE tag does not exist: $GE_TAG"
+            exit 1
+          fi
+
           RELEASE_TAG="${GE_TAG}-LinUwUx${LINUWUX_BUILD_SUFFIX}"
 
           echo "Release upstream: $GE_TAG"
